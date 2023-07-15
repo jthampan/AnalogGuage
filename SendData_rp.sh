@@ -1,6 +1,7 @@
 #!/bin/bash
 
-LOG_FOLDER=~/AnalogGuage
+TOPDIR=$(pwd)
+LOG_FOLDER=$TOPDIR
 
 capture_image() {
   filename="meter.jpeg"
@@ -32,6 +33,52 @@ capture_image() {
   fi
 
   return 0
+}
+
+send_folder() {
+    # Set the URL
+    url="https://prod-34.southeastasia.logic.azure.com:443/workflows/037373ac6baa4cf498384ffdbc6efb2c/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=0FHEhzq8xpblOZqFbfOPHH4eRF2JUJhBPHn3n96i_-w"
+
+    # Get the folder path
+    folder_name="$1"
+
+    echo "Sending folder $folder_name"
+    # Create a temporary ZIP file
+    zip_file="/tmp/$folder_name.zip"
+
+    # Change the current directory to the parent directory of the folder
+    cd $TOPDIR
+
+    # Zip only the folder contents without the parent directory
+    zip -r "$zip_file" "$folder_name"
+
+    # Read the file contents
+    file_contents=$(base64 -w 0 "$zip_file")
+
+    # Create the JSON body
+    json_body=$(cat <<EOF
+{
+    "fileName": "$folder_name.zip",
+    "type": "application/zip",
+    "fileContent": "$file_contents"
+}
+EOF
+)
+
+    # Create a temporary JSON file for the payload
+    json_file="/tmp/json_payload.json"
+    echo "$json_body" > "$json_file"
+
+    # Make the request
+    result=$(curl -X POST -H "Content-Type: application/json" --data-binary "@$json_file" "$url")
+
+    echo "Removing zip file and folder path"
+
+    cd $TOPDIR
+
+    # Remove the temporary ZIP file
+    rm "$zip_file" "$json_file"
+    rm -rf $TOPDIR/$folder_name
 }
 
 send_file() {
@@ -120,11 +167,12 @@ failure_counter=0
 max_failures=2  # Maximum number of failures before sending an alert
 
 while true; do
-  cd $LOG_FOLDER
-  rm -rf $LOG_FOLDER/log.txt
 
-  current_time=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
-  echo "Starting Image Capture at $current_time" > $LOG_FOLDER/log.txt
+  folder_time=$(date -u +"%Y-%m-%d_%H:%M:%S")
+  mkdir -p $TOPDIR/log_$folder_time
+  LOG_FOLDER=$TOPDIR/log_$folder_time
+
+  echo "Starting Image Capture at $folder_time" > $LOG_FOLDER/log.txt
   # Execute the ifconfig command and capture its output
   ifconfig_output=$(ifconfig)
 
@@ -139,13 +187,14 @@ while true; do
 		  send_alert "Error: Image doesnt capture for 1 hr"
 		  failure_counter=0
 	  fi
-	  echo "Capture Image failed Sleeping for 3600 sec $current_time" >> $LOG_FOLDER/log.txt
-	  send_file $LOG_FOLDER/log.txt
+	  echo "Capture Image failed Sleeping for 3600 sec $folder_time" >> $LOG_FOLDER/log.txt
+  	  cp -rf $TOPDIR/images $LOG_FOLDER
+	  send_folder log_$folder_time
           sleep 3600
 	  continue
   fi
   sleep 10
-  echo "Starting Python Script at $current_time" >> $LOG_FOLDER/log.txt
+  echo "Starting Python Script at $folder_time" >> $LOG_FOLDER/log.txt
   run_python_script
   if [ "$?" -gt 0 ]; then
 	  ((failure_counter++))
@@ -154,12 +203,15 @@ while true; do
 		  send_alert "Error: Unable to read guage meter value for 1 hr"
 		  failure_counter=0
 	  fi
-	  echo "Python script failed Sleeping for 3600 sec $current_time" >> $LOG_FOLDER/log.txt
-	  send_file $LOG_FOLDER/log.txt
+	  echo "Python script failed Sleeping for 3600 sec $folder_time" >> $LOG_FOLDER/log.txt
+  	  cp -rf $TOPDIR/images $LOG_FOLDER
+	  send_folder log_$folder_time
           sleep 3600
 	  continue
   fi
-  echo "Sleeping for 3600 sec $current_time" >> $LOG_FOLDER/log.txt
-  send_file $LOG_FOLDER/log.txt
+  echo "Sleeping for 3600 sec $folder_time" >> $LOG_FOLDER/log.txt
+
+  cp -rf $TOPDIR/images $LOG_FOLDER
+  send_folder log_$folder_time
   sleep 3600
 done
