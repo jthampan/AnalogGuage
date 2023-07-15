@@ -12,13 +12,31 @@ import requests
 from datetime import datetime, timedelta
 import pytz
 
+def is_image_dark(image_name, brightness_threshold):
+    # Load the image
+    image = cv2.imread('images/%s' %(image_name))
+
+    # Convert the image to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Calculate the average brightness (luminance)
+    average_brightness = cv2.mean(gray)[0]
+
+    #print("average_brightness = ", average_brightness)
+    #print("brightness_threshold = ", brightness_threshold)
+
+    # Compare the average brightness to the threshold
+    is_dark = average_brightness < brightness_threshold
+
+    return average_brightness, is_dark
+
 def is_within_brightness_range():
     # Get the current time in Singapore
     tz = pytz.timezone('Asia/Singapore')
     current_time_sg = datetime.now(tz)
 
     # Check if the current time is within the brightness range (7 PM to 6 AM)
-    return current_time_sg.hour >= 17 or current_time_sg.hour < 6
+    return current_time_sg.hour >= 19 or current_time_sg.hour < 6
 
 def darken_needle(image_name, threshold_value):
     # Load the image
@@ -365,7 +383,7 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type):
     diff1UpperBound = 0.5
 
     # diff2LowerBound and diff2UpperBound determine how close the other point of the line should be to the outside of the gauge
-    diff2LowerBound = 0.55
+    diff2LowerBound = 0.35
     diff2UpperBound = 1.0
 
     output = img.copy()
@@ -374,6 +392,14 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type):
         for x1, y1, x2, y2 in lines[i]:
             diff1 = dist_2_pts(x, y, x1, y1)  # x, y is center of circle
             diff2 = dist_2_pts(x, y, x2, y2)  # x, y is center of circle
+
+            #print("x1 %s y1 %s x2 %s y2 %s" %(x1, y1, x2, y2))
+            #print("diff1 %s diff2 %s" %(diff1, diff2))
+            #img = output.copy()
+            #img1 = output.copy()
+            #cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            #cv2.imwrite('images/output/gauge-%s-final_line%s.%s' % (gauge_number, i, file_type), img)
+           
             # set diff1 to be the smaller (closest to the center) of the two), makes the math easier
             if diff1 > diff2:
                 temp = diff1
@@ -421,8 +447,28 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type):
 
     return final_line_list
 
+def get_all_lines(image_path, gauge_number, file_type, x, y, r):
+    img = cv2.imread(image_path)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-def get_all_lines(image_path, gauge_number, file_type):
+    threshold = 50
+    # Apply Canny edge detection
+    edges = cv2.Canny(gray, threshold, threshold * 2)
+
+    cv2.imwrite('images/output/gauge-%s-dst.%s' % (gauge_number, file_type), edges)
+    # Set the threshold values for Hough Line Transform
+    rho = 3
+    theta = np.pi / 180
+    min_line_length = 20
+    max_line_gap = 2
+
+    # Perform Hough Line Transform
+    lines = cv2.HoughLinesP(edges, rho=rho, theta=theta, threshold=threshold,
+                            minLineLength=min_line_length, maxLineGap=max_line_gap)
+
+    return lines
+
+def get_all_lines1(image_path, gauge_number, file_type):
     img = cv2.imread(image_path)
     gray2 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -486,8 +532,17 @@ def main():
         min_angle, max_angle, min_value, max_value = get_user_input(image_name)
         
         image_path = "images/crop%s.jpg" % (i)
-        if is_within_brightness_range():
-            brightened_image = increase_brightness(image_name, 1.8, 10)
+        brightness_threshold = 150
+
+        average_brightness, is_dark = is_image_dark(image_name, brightness_threshold)
+
+        if is_dark:
+            if average_brightness < 120:
+                brightened_image = increase_brightness(image_name, 1.8, 10)
+            elif average_brightness < 140:
+                brightened_image = increase_brightness(image_name, 1.5, 10)
+            else:
+                brightened_image = increase_brightness(image_name, 1.2, 10)
             cv2.imwrite(image_path, brightened_image)
 
         gauge_number = i
@@ -498,7 +553,7 @@ def main():
 
         img, x, y, r = find_and_draw_circle(image_path, gauge_number, file_type)
         img = draw_pts_and_text_in_img_to_show_deg(img, x, y, r, image_path, gauge_number, file_type)
-        lines = get_all_lines(image_path, gauge_number, file_type)
+        lines = get_all_lines(image_path, gauge_number, file_type, x, y, r)
         no_of_lines = len(lines)
         #print("no_of_lines = %s" % (no_of_lines))
         final_line_list = get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type)
