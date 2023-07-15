@@ -11,25 +11,13 @@ import base64
 import requests
 from datetime import datetime
 
-def upload_file(name):
-    current_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    timestamped_filename = "{}_{}{}".format(os.path.splitext(name)[0], current_timestamp, os.path.splitext(name)[1])
+def increase_brightness(image_name, alpha, beta):
+    # Load the image
+    image = cv2.imread('images/%s' %(image_name))
 
-    url = "https://prod-34.southeastasia.logic.azure.com:443/workflows/037373ac6baa4cf498384ffdbc6efb2c/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=0FHEhzq8xpblOZqFbfOPHH4eRF2JUJhBPHn3n96i_-w"
-
-    file = open(name, 'rb')
-    file_contents = file.read()
-    base64_contents = base64.b64encode(file_contents).decode("utf-8")
-
-    json_body = {
-        "fileName": timestamped_filename,
-        "type": "image/jpeg",
-        "fileContent": base64_contents
-    }
-
-    result = requests.post(url, json=json_body)
-
-    file.close()
+    # Apply brightness adjustment
+    adjusted_image = cv2.addWeighted(image, alpha, image, 0, beta)
+    return adjusted_image
 
 def rotate_image_counterclockwise(image_name):
     # Load the image
@@ -90,10 +78,11 @@ def crop_image_using_circle(image_name):
     edges = cv2.Canny(blurred, 50, 150)
     # Detect circles using the HoughCircles function
 
-    circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, dp=1, minDist=500, param1=200, param2=50, minRadius=0, maxRadius=155)
+    #circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, dp=1, minDist=500, param1=200, param2=50, minRadius=0, maxRadius=155)
+    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, minRadius=50, maxRadius=500)
     
-    #if circles is not None:
-    #    print("Number of circles detected:", len(circles[0]))
+    if circles is not None:
+        print("Number of circles detected:", len(circles[0]))
     #else:
     #    print("No circles detected in the image.")
     # If circles are found, draw them and crop the image
@@ -221,7 +210,6 @@ def draw_pts_and_text_in_img_to_show_deg(img, x, y, r, image_path, gauge_number,
 
     # Image after the lines and labels added to the image
     cv2.imwrite('images/output/gauge-%s-calibration.%s' % (gauge_number, file_type), img)
-    upload_file('images/output/gauge-%s-calibration.%s' % (gauge_number, file_type))
 
     return img;
 
@@ -296,7 +284,6 @@ def find_and_draw_circle(image_path, gauge_number, file_type):
             # Draw a small circle (of radius 1) to show the center.
             cv2.circle(img, (a, b), 1, (0, 0, 255), 3)
             cv2.imwrite('images/output/gauge-%s-circles-detected.%s' % (gauge_number, file_type), img)
-            upload_file('images/output/gauge-%s-circles-detected.%s' % (gauge_number, file_type))
 
         return img, a, b, r
 
@@ -360,6 +347,8 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type):
     diff2LowerBound = 0.55
     diff2UpperBound = 1.0
 
+    output = img.copy()
+
     for i in range(0, len(lines)):
         for x1, y1, x2, y2 in lines[i]:
             diff1 = dist_2_pts(x, y, x1, y1)  # x, y is center of circle
@@ -376,7 +365,14 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type):
             if ((diff1 < diff1UpperBound * r) and (diff1 > diff1LowerBound * r) and
                 (diff2 < diff2UpperBound * r) and (diff2 > diff2LowerBound * r)):
                 line_length = dist_2_pts(x1, y1, x2, y2)
-                #print("Found a acceptable line line_length: %s" % line_length)
+                img = output.copy()
+                img1 = output.copy()
+                cv2.line(img, (x, y), (x1, y1), (0, 255, 0), 2)
+                cv2.line(img1, (x, y), (x2, y2), (0, 255, 0), 2)
+                print("Found a acceptable line line_length: %s" % line_length)
+                # for testing purposes, show the line overlayed on the original image
+                cv2.imwrite('images/output/gauge-%s-final_line%s.%s' % (gauge_number, i, file_type), img)
+                cv2.imwrite('images/output/gauge-%s-final_line%s_1.%s' % (gauge_number, i, file_type), img1)
                 #print("x1 %s y1 %s x2 %s y2 %s" % (x1, y1, x2, y2))
                 #print("diff1 = %s < diff1UpperBound * r = %s" % (diff1, diff1UpperBound * r))
                 #print("diff1 = %s > diff1LowerBound * r = %s" % (diff1, diff1LowerBound * r))
@@ -402,7 +398,6 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type):
 
     # for testing purposes, show the line overlayed on the original image
     cv2.imwrite('images/output/gauge-%s-final_line.%s' % (gauge_number, file_type), img)
-    upload_file('images/output/gauge-%s-final_line.%s' % (gauge_number, file_type))
 
     return final_line_list
 
@@ -432,7 +427,6 @@ def get_all_lines(image_path, gauge_number, file_type):
     # apply thresholding which helps for finding lines
     th, dst = cv2.threshold(gray2, thresh, maxValue, cv2.THRESH_BINARY_INV);
     cv2.imwrite('images/output/gauge-%s-dst.%s' % (gauge_number, file_type), dst)
-    upload_file('images/output/gauge-%s-dst.%s' % (gauge_number, file_type))
 
     # find lines
     # r = xcos@ + ysin@
@@ -446,11 +440,11 @@ def get_all_lines(image_path, gauge_number, file_type):
     #output = img.copy()
     # for testing purposes, show all found lines
     #for i in range(0, len(lines)):
-        #for x1, y1, x2, y2 in lines[i]:
-            #img = output.copy()
-            #cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            #print('For Index %s x1 %s y1 %s x2 %s y2 %s' % (i, x1, y1, x2, y2))
-            #cv2.imwrite('images/output/gauge-%s-lines-test%s.%s' % (gauge_number, i, file_type), img)
+    #    for x1, y1, x2, y2 in lines[i]:
+    #        img = output.copy()
+    #        cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    #        print('For Index %s x1 %s y1 %s x2 %s y2 %s' % (i, x1, y1, x2, y2))
+    #        cv2.imwrite('images/output/gauge-%s-lines-test%s.%s' % (gauge_number, i, file_type), img)
 
     return lines
 
@@ -461,26 +455,39 @@ def main():
     for f in files:
         os.remove(f)
 
-    image_name = "meter.jpeg"
-    min_angle, max_angle, min_value, max_value = get_user_input(image_name)
-    image_path = "images/meter.jpeg"
-    gauge_number = 1
-    file_type = 'jpeg'
-    files = glob.glob('images/output/gauge-%s*' % (gauge_number))
+    files = glob.glob('images/output/*')
     for f in files:
         os.remove(f)
-    img, x, y, r = find_and_draw_circle(image_path, gauge_number, file_type)
-    img = draw_pts_and_text_in_img_to_show_deg(img, x, y, r, image_path, gauge_number, file_type)
-    lines = get_all_lines(image_path, gauge_number, file_type)
-    no_of_lines = len(lines)
-    #print("no_of_lines = %s" % (no_of_lines))
-    final_line_list = get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type)
-    final_angle = find_angle_between_2_points(x, y, final_line_list)
-    #print("final_angle %s" % (final_angle))
-    angle_range = (float(max_angle) - float(min_angle))
-    val_range = (float(max_value) - float(min_value))
-    new_value = (((float(final_angle) - float(min_angle)) * val_range) / angle_range) + float(min_value)
-    print("Current reading: For Image %s %s PSI" % (1, new_value))
+
+    num_circles = crop_image_using_circle("meter.jpeg")
+
+    for i in range(1, num_circles + 1):
+        image_name = "crop%d.jpg" % i
+        min_angle, max_angle, min_value, max_value = get_user_input(image_name)
+        
+        image_path = "images/crop%s.jpg" % (i)
+        brightened_image = increase_brightness(image_name, 1.8, 10)
+        cv2.imwrite(image_path, brightened_image)
+
+        gauge_number = i
+        file_type = 'jpg'
+        files = glob.glob('images/output/gauge-%s*' % (gauge_number))
+        for f in files:
+            os.remove(f)
+
+        img, x, y, r = find_and_draw_circle(image_path, gauge_number, file_type)
+        img = draw_pts_and_text_in_img_to_show_deg(img, x, y, r, image_path, gauge_number, file_type)
+        lines = get_all_lines(image_path, gauge_number, file_type)
+        no_of_lines = len(lines)
+        #print("no_of_lines = %s" % (no_of_lines))
+        final_line_list = get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type)
+        final_angle = find_angle_between_2_points(x, y, final_line_list)
+        #print("final_angle %s" % (final_angle))
+
+        angle_range = (float(max_angle) - float(min_angle))
+        val_range = (float(max_value) - float(min_value))
+        new_value = (((float(final_angle) - float(min_angle)) * val_range) / angle_range) + float(min_value)
+        print("Current reading: For Image %s %s PSI" % (i, new_value))
 
 if __name__ == '__main__':
     main()
