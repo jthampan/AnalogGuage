@@ -81,8 +81,8 @@ def crop_image_using_circle(image_name):
     #circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, dp=1, minDist=500, param1=200, param2=50, minRadius=0, maxRadius=155)
     circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, minRadius=50, maxRadius=500)
     
-    if circles is not None:
-        print("Number of circles detected:", len(circles[0]))
+    #if circles is not None:
+    #    print("Number of circles detected:", len(circles[0]))
     #else:
     #    print("No circles detected in the image.")
     # If circles are found, draw them and crop the image
@@ -365,14 +365,13 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type):
             if ((diff1 < diff1UpperBound * r) and (diff1 > diff1LowerBound * r) and
                 (diff2 < diff2UpperBound * r) and (diff2 > diff2LowerBound * r)):
                 line_length = dist_2_pts(x1, y1, x2, y2)
-                img = output.copy()
-                img1 = output.copy()
-                cv2.line(img, (x, y), (x1, y1), (0, 255, 0), 2)
-                cv2.line(img1, (x, y), (x2, y2), (0, 255, 0), 2)
-                print("Found a acceptable line line_length: %s" % line_length)
-                # for testing purposes, show the line overlayed on the original image
-                cv2.imwrite('images/output/gauge-%s-final_line%s.%s' % (gauge_number, i, file_type), img)
-                cv2.imwrite('images/output/gauge-%s-final_line%s_1.%s' % (gauge_number, i, file_type), img1)
+                #img = output.copy()
+                #img1 = output.copy()
+                #cv2.line(img, (x, y), (x1, y1), (0, 255, 0), 2)
+                #cv2.line(img1, (x, y), (x2, y2), (0, 255, 0), 2)
+                #print("Found a acceptable line line_length: %s" % line_length)
+                #cv2.imwrite('images/output/gauge-%s-final_line%s.%s' % (gauge_number, i, file_type), img)
+                #cv2.imwrite('images/output/gauge-%s-final_line%s_1.%s' % (gauge_number, i, file_type), img1)
                 #print("x1 %s y1 %s x2 %s y2 %s" % (x1, y1, x2, y2))
                 #print("diff1 = %s < diff1UpperBound * r = %s" % (diff1, diff1UpperBound * r))
                 #print("diff1 = %s > diff1LowerBound * r = %s" % (diff1, diff1LowerBound * r))
