@@ -168,7 +168,10 @@ max_failures=2  # Maximum number of failures before sending an alert
 
 while true; do
 
-  folder_time=$(date -u +"%Y-%m-%d_%H:%M:%S")
+  # Set the Singapore timezone
+  export TZ='Asia/Singapore'
+  # Get the current time in Singapore
+  folder_time=$(date '+%Y-%m-%d_%H-%M-%S')
   mkdir -p $TOPDIR/log_$folder_time
   LOG_FOLDER=$TOPDIR/log_$folder_time
 

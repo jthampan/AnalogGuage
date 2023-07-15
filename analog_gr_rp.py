@@ -9,7 +9,28 @@ import time
 import json
 import base64
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
+
+def is_within_brightness_range():
+    # Get the current time in Singapore
+    tz = pytz.timezone('Asia/Singapore')
+    current_time_sg = datetime.now(tz)
+
+    # Check if the current time is within the brightness range (7 PM to 6 AM)
+    return current_time_sg.hour >= 17 or current_time_sg.hour < 6
+
+def darken_needle(image_name, threshold_value):
+    # Load the image
+    image = cv2.imread('images/%s' %(image_name), cv2.IMREAD_GRAYSCALE)
+    
+    # Apply thresholding to make the needle darker
+    _, thresholded_image = cv2.threshold(image, threshold_value, 255, cv2.THRESH_BINARY_INV)
+
+    # Convert the thresholded image to BGR format
+    thresholded_image = cv2.cvtColor(thresholded_image, cv2.COLOR_GRAY2BGR)
+
+    return thresholded_image
 
 def increase_brightness(image_name, alpha, beta):
     # Load the image
@@ -238,10 +259,10 @@ def find_and_draw_circle(image_path, gauge_number, file_type):
     # int(height*0.35) minRadius: Minimum circle radius.
     # int(height*0.48) maxRadius: Maximum circle radius.
 
-    #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 100, np.array([]), 100, 50, int(height * 0.35),
-    #                           int(height * 0.48))
+    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 100, np.array([]), 100, 50, int(height * 0.35),
+                               int(height * 0.48))
 
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, minRadius=50, maxRadius=500)
+    #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, minRadius=50, maxRadius=500)
     #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, int(height * 0.35), int(height * 0.48))
 
     #if circles is not None:
@@ -465,8 +486,9 @@ def main():
         min_angle, max_angle, min_value, max_value = get_user_input(image_name)
         
         image_path = "images/crop%s.jpg" % (i)
-        brightened_image = increase_brightness(image_name, 1.8, 10)
-        cv2.imwrite(image_path, brightened_image)
+        if is_within_brightness_range():
+            brightened_image = increase_brightness(image_name, 1.8, 10)
+            cv2.imwrite(image_path, brightened_image)
 
         gauge_number = i
         file_type = 'jpg'
