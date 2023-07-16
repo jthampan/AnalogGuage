@@ -549,11 +549,12 @@ def main():
     num_images = 1  # Number of images (e.g., meter1.jpeg, meter2.jpeg, etc.)
 
     for i in range(1, num_images + 1):
-        #image_name = f"meter{i}.jpeg"  # Construct the image name
-        #image_path = f"images/{image_name}"  # Construct the image path
+        i=5
+        image_name = f"meter{i}.jpeg"  # Construct the image name
+        image_path = f"images/{image_name}"  # Construct the image path
 
         # Copy the image to "meter.jpeg"
-        #shutil.copy(image_path, "images/meter.jpeg")
+        shutil.copy(image_path, "images/meter.jpeg")
 
         # Perform the operations on the image
         num_circles = crop_image_using_circle("meter.jpeg")
