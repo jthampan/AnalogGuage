@@ -13,6 +13,14 @@ from datetime import datetime, timedelta
 import pytz
 import shutil
 
+def write_to_log_file(log_message):
+    log_file_path = 'python_log.txt'
+
+    # Open the log file in append mode
+    with open(log_file_path, 'a') as log_file:
+        # Write the message to the log file
+        log_file.write(log_message + '\n')
+
 def is_image_dark(image_name, brightness_threshold):
     # Load the image
     image = cv2.imread('images/%s' %(image_name))
@@ -23,8 +31,8 @@ def is_image_dark(image_name, brightness_threshold):
     # Calculate the average brightness (luminance)
     average_brightness = cv2.mean(gray)[0]
 
-    #print("average_brightness = ", average_brightness)
-    #print("brightness_threshold = ", brightness_threshold)
+    write_to_log_file("average_brightness = ", average_brightness)
+    write_to_log_file("brightness_threshold = ", brightness_threshold)
 
     # Compare the average brightness to the threshold
     is_dark = average_brightness < brightness_threshold
@@ -121,10 +129,10 @@ def crop_image_using_circle(image_name):
     #circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, dp=1, minDist=500, param1=200, param2=50, minRadius=0, maxRadius=155)
     circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, minRadius=50, maxRadius=500)
     
-    #if circles is not None:
-    #    print("Number of circles detected:", len(circles[0]))
-    #else:
-    #    print("No circles detected in the image.")
+    if circles is not None:
+        write_to_log_file("Number of circles detected after crop:", len(circles[0]))
+    else:
+        write_to_log_file("No circles detected in the image after crop.")
     # If circles are found, draw them and crop the image
     if circles is not None:
         # Convert the (x, y) coordinates and radius of the circles to integers
@@ -158,6 +166,7 @@ def get_user_input(image_name):
     max_angle =330
     min_value = 0
     max_value = 230
+    write_to_log_file("min_angle %s max_angle %s min_value %s max_value %s", % (min_angle, max_angle, min_value, max_value))
     return min_angle, max_angle, min_value, max_value
 
 def avg_circles(circles, b):
@@ -284,10 +293,10 @@ def find_and_draw_circle(image_path, gauge_number, file_type):
     #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, minRadius=50, maxRadius=500)
     #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, int(height * 0.35), int(height * 0.48))
 
-    #if circles is not None:
-    #    print("Number of circles detected:", len(circles[0]))
-    #else:
-    #    print("No circles detected in the image.")
+    if circles is not None:
+        write_to_log_file("find_and_draw_circle Number of circles detected:", len(circles[0]))
+    else:
+        write_to_log_file("find_and_draw_circle No circles detected in the image.")
 
 
     # Draw circles that are detected.
@@ -406,8 +415,8 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type):
                 temp = diff1
                 diff1 = diff2
                 diff2 = temp
-            #print("diff1 = %s diff1UpperBound * r = %s diff1LowerBound * r = %s" % (diff1, diff1UpperBound * r, diff1LowerBound * r))
-            #print("diff2 = %s diff2UpperBound * r = %s diff2LowerBound * r = %s" % (diff2, diff2UpperBound * r, diff2LowerBound * r))
+            write_to_log_file("get_final_line diff1 = %s diff1UpperBound * r = %s diff1LowerBound * r = %s" % (diff1, diff1UpperBound * r, diff1LowerBound * r))
+            write_to_log_file("get_final_line diff2 = %s diff2UpperBound * r = %s diff2LowerBound * r = %s" % (diff2, diff2UpperBound * r, diff2LowerBound * r))
 
             # check if line is within an acceptable range
             if ((diff1 < diff1UpperBound * r) and (diff1 > diff1LowerBound * r) and
@@ -427,6 +436,7 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type):
                 #print("diff2 = %s > diff2LowerBound * r = %s" % (diff2, diff2LowerBound * r))
                 # add to final list
                 final_line_list.append([x1, y1, x2, y2])
+    write_to_log_file("\n\n\n")
     # assumes the first line is the best one
     x1 = final_line_list[0][0]
     y1 = final_line_list[0][1]
@@ -474,19 +484,19 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
     for i in range(0, len(lines)):
         for x1, y1, x2, y2 in lines[i]:
             img = output.copy()
-            img1 = output.copy()
             dist_pt_0 = dist_2_pts(x, y, x1, y1)
             dist_pt_1 = dist_2_pts(x, y, x2, y2)
-            #print("dist_pt_0=%s dist_pt_1=%s radius %s name all_line%s.%s" % (dist_pt_0, dist_pt_1, r, i, file_type))
+            write_to_log_file("get_all_lines dist_pt_0=%s dist_pt_1=%s radius %s name all_line%s.%s" % (dist_pt_0, dist_pt_1, r, i, file_type))
             cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.imwrite('images/output/gauge-%s-all_line%s.%s' % (gauge_number, i, file_type), img)
+            cv2.imwrite('images/output/all_lines/gauge-%s-all_line%s.%s' % (gauge_number, i, file_type), img)
    
             # Filter lines based on conditions
             if ((r * 0.6) <= dist_pt_0 <= (r * 0.9) and ((dist_pt_0 - dist_pt_1) >= 22) and ((r * 0.05) <= dist_pt_1 <= (r * 0.7))):
                 filtered_lines.append(lines[i])
                 # Save the filtered line as an image
-                cv2.imwrite('images/output/gauge-%s-filtered_line%s.%s' % (gauge_number, i, file_type), img)
+                cv2.imwrite('images/output/all_lines/gauge-%s-filtered_line%s.%s' % (gauge_number, i, file_type), img)
 
+    write_to_log_file("\n\n\n")
     return filtered_lines
 
 def get_all_lines1(image_path, gauge_number, file_type):
@@ -546,6 +556,16 @@ def main():
     for f in files:
         os.remove(f)
 
+    folder_path = 'images/output/'
+    # Create the folder if it doesn't exist
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+    folder_path = 'images/output/all_lines'
+    # Create the folder if it doesn't exist
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
     num_images = 1  # Number of images (e.g., meter1.jpeg, meter2.jpeg, etc.)
 
     for i in range(1, num_images + 1):
@@ -555,11 +575,17 @@ def main():
         # Copy the image to "meter.jpeg"
         #shutil.copy(image_path, "images/meter.jpeg")
 
+        write_to_log_file("Starting Test meter%s.jpeg" % (i))
+        write_to_log_file("==========================")
+
         # Perform the operations on the image
         num_circles = crop_image_using_circle("meter.jpeg")
         for j in range(1, num_circles + 1):
             image_name = f"crop{j}.jpg"  # Construct the cropped image name
             min_angle, max_angle, min_value, max_value = get_user_input(image_name)
+
+            write_to_log_file("Starting Test crop%s.jpg" % (j))
+            write_to_log_file("==========================")
 
             image_path = f"images/{image_name}"
             brightness_threshold = 150
@@ -593,7 +619,8 @@ def main():
             angle_range = (float(max_angle) - float(min_angle))
             val_range = (float(max_value) - float(min_value))
             new_value = (((float(final_angle) - float(min_angle)) * val_range) / angle_range) + float(min_value)
-            print(f"Current reading: For Image meter{i}.jpeg {new_value} PSI")
+            write_to_log_file("Current reading: For Image %s %s PSI", % (j, new_value))
+            print(f"Current reading: For Image {j} {new_value} PSI")
 
 if __name__ == '__main__':
     main()
