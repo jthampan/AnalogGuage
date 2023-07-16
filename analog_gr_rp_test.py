@@ -551,7 +551,7 @@ def get_all_lines1(image_path, gauge_number, file_type):
 
 def main():
 
-    files = glob.glob('images/crop%s*')
+    files = glob.glob('images/crop*')
     for f in files:
         os.remove(f)
 
