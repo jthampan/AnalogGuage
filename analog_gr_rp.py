@@ -31,8 +31,8 @@ def is_image_dark(image_name, brightness_threshold):
     # Calculate the average brightness (luminance)
     average_brightness = cv2.mean(gray)[0]
 
-    write_to_log_file("average_brightness = ", average_brightness)
-    write_to_log_file("brightness_threshold = ", brightness_threshold)
+    write_to_log_file("average_brightness = %s" % (average_brightness))
+    write_to_log_file("brightness_threshold = %s" % (brightness_threshold))
 
     # Compare the average brightness to the threshold
     is_dark = average_brightness < brightness_threshold
@@ -130,7 +130,7 @@ def crop_image_using_circle(image_name):
     circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, minRadius=50, maxRadius=500)
     
     if circles is not None:
-        write_to_log_file("Number of circles detected after crop:", len(circles[0]))
+        write_to_log_file("Number of circles detected after crop: %s" % (len(circles[0])))
     else:
         write_to_log_file("No circles detected in the image after crop.")
     # If circles are found, draw them and crop the image
@@ -166,7 +166,7 @@ def get_user_input(image_name):
     max_angle =330
     min_value = 0
     max_value = 230
-    write_to_log_file("min_angle %s max_angle %s min_value %s max_value %s", % (min_angle, max_angle, min_value, max_value))
+    write_to_log_file("min_angle %s max_angle %s min_value %s max_value %s" % (min_angle, max_angle, min_value, max_value))
     return min_angle, max_angle, min_value, max_value
 
 def avg_circles(circles, b):
@@ -294,7 +294,7 @@ def find_and_draw_circle(image_path, gauge_number, file_type):
     #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, int(height * 0.35), int(height * 0.48))
 
     if circles is not None:
-        write_to_log_file("find_and_draw_circle Number of circles detected:", len(circles[0]))
+        write_to_log_file("find_and_draw_circle Number of circles detected: %s" % (len(circles[0])))
     else:
         write_to_log_file("find_and_draw_circle No circles detected in the image.")
 
@@ -398,6 +398,8 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type):
 
     output = img.copy()
 
+    write_to_log_file("Filtering lines based on diff1 < diff1UpperBound * r and diff1 > diff1LowerBound * r and")
+    write_to_log_file("diff2 < diff2UpperBound * r and diff2 > diff2LowerBound * r")
     for i in range(0, len(lines)):
         for x1, y1, x2, y2 in lines[i]:
             diff1 = dist_2_pts(x, y, x1, y1)  # x, y is center of circle
@@ -436,7 +438,7 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type):
                 #print("diff2 = %s > diff2LowerBound * r = %s" % (diff2, diff2LowerBound * r))
                 # add to final list
                 final_line_list.append([x1, y1, x2, y2])
-    write_to_log_file("\n\n\n")
+    write_to_log_file("\n")
     # assumes the first line is the best one
     x1 = final_line_list[0][0]
     y1 = final_line_list[0][1]
@@ -481,6 +483,7 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
 
     filtered_lines = []
 
+    write_to_log_file("Filtering lines based on r * 0.6 <= dist_pt_0 <= r * 0.9 and dist_pt_0 - dist_pt_1 >= 22 and r * 0.05 <= dist_pt_1 <= r * 0.7")
     for i in range(0, len(lines)):
         for x1, y1, x2, y2 in lines[i]:
             img = output.copy()
@@ -496,7 +499,7 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
                 # Save the filtered line as an image
                 cv2.imwrite('images/output/all_lines/gauge-%s-filtered_line%s.%s' % (gauge_number, i, file_type), img)
 
-    write_to_log_file("\n\n\n")
+    write_to_log_file("\n")
     return filtered_lines
 
 def get_all_lines1(image_path, gauge_number, file_type):
@@ -552,11 +555,16 @@ def main():
     for f in files:
         os.remove(f)
 
-    files = glob.glob('images/output/*')
-    for f in files:
-        os.remove(f)
+    file_path = 'python_log.txt'
+    # Remove the file if it exists
+    if os.path.exists(file_path):
+        os.remove(file_path)
 
-    folder_path = 'images/output/'
+    folder_path = 'images/output'
+    # Remove the directory and its contents
+    if os.path.exists(folder_path):
+        shutil.rmtree(folder_path)
+
     # Create the folder if it doesn't exist
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
