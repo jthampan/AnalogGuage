@@ -1,22 +1,107 @@
 #!/bin/bash
 
-capture_image() {
-  filename="meter.jpg"
-  nvgstcapture-1.0 --camsrc=0 --cap-dev-node=0 --automate --capture-auto --file-name="$filename"
+TOPDIR=$(pwd)
+LOG_FOLDER=$TOPDIR
 
-  captured_filename=$(find . -maxdepth 1 -type f -name "meter.jpg_*.jpg" | sort -n | tail -1)
+capture_image() {
+  filename="meter.jpeg"
+  nvgstcapture-1.0 --camsrc=0 --cap-dev-node=0 --automate --capture-auto --file-name="$filename" &>> $LOG_FOLDER/log.txt
+
+  captured_filename=$(find . -maxdepth 1 -type f -name "meter.jpeg_*.jpg" | sort -n | tail -1)
+  
   mv "$captured_filename" "images/$filename"
+  
+  if [ $? -ne 0 ]; then
+    echo "Failed to move captured image $captured_filename. Exiting..." >> $LOG_FOLDER/log.txt
+    send_alert "Failed to move captured image $captured_filename. Exiting..."
+    return 1
+  fi
+
+  if grep -q "/dev/video0 does not exist" "$LOG_FOLDER/log.txt"; then
+    echo "/dev/video0 does not exist. Exiting..."
+    send_alert "video0 does not exist Failed to capture guage image: $filename"
+    return 1
+  fi
 
   if [ -f "images/$filename" ]; then
-    echo "Image captured successfully: images/$filename"
+    echo "Guage image captured successfully: images/$filename" >> $LOG_FOLDER/log.txt
     send_image "images/$filename"
   else
-    echo "Failed to capture image: $filename"
-    send_alert "Failed to capture image: $filename"
+    echo "Failed to capture image: $filename" >> $LOG_FOLDER/log.txt
+    send_alert "Failed to capture guage image: $filename"
     return 1
   fi
 
   return 0
+}
+
+send_folder() {
+    # Set the URL
+    url="https://prod-34.southeastasia.logic.azure.com:443/workflows/037373ac6baa4cf498384ffdbc6efb2c/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=0FHEhzq8xpblOZqFbfOPHH4eRF2JUJhBPHn3n96i_-w"
+
+    # Get the folder path
+    folder_name="$1"
+
+    echo "Sending folder $folder_name"
+    # Create a temporary ZIP file
+    zip_file="/tmp/$folder_name.zip"
+
+    # Change the current directory to the parent directory of the folder
+    cd $TOPDIR
+
+    # Zip only the folder contents without the parent directory
+    zip -r "$zip_file" "$folder_name"
+
+    # Read the file contents
+    file_contents=$(base64 -w 0 "$zip_file")
+
+    # Create the JSON body
+    json_body=$(cat <<EOF
+{
+    "fileName": "$folder_name.zip",
+    "type": "application/zip",
+    "fileContent": "$file_contents"
+}
+EOF
+)
+
+    # Create a temporary JSON file for the payload
+    json_file="/tmp/json_payload.json"
+    echo "$json_body" > "$json_file"
+
+    # Make the request
+    result=$(curl -X POST -H "Content-Type: application/json" --data-binary "@$json_file" "$url")
+
+    echo "Removing zip file and folder path"
+
+    cd $TOPDIR
+
+    # Remove the temporary ZIP file
+    rm "$zip_file" "$json_file"
+    rm -rf $TOPDIR/$folder_name
+}
+
+send_file() {
+    # Set the URL
+    url="https://prod-34.southeastasia.logic.azure.com:443/workflows/037373ac6baa4cf498384ffdbc6efb2c/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=0FHEhzq8xpblOZqFbfOPHH4eRF2JUJhBPHn3n96i_-w"
+
+    # Read the file contents
+    file_name="$1"
+    current_timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
+    timestamped_file_name="${file_name%.*}_${current_timestamp}.${file_name##*.}"    
+    file_contents=$(base64 -w 0 "$file_name")
+
+    # Create the JSON body
+    json_body=$(cat <<EOF
+{
+    "fileName": "$timestamped_file_name",
+    "type": "image/txt",
+    "fileContent": "$file_contents"
+}
+EOF
+)
+    # Make the request
+    result=$(curl -X POST -H "Content-Type: application/json" -d "$json_body" "$url")
 }
 
 send_image() {
@@ -25,28 +110,22 @@ send_image() {
 
     # Read the file contents
     file_name="$1"
+    current_timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
+    timestamped_file_name="${file_name%.*}_${current_timestamp}.${file_name##*.}"    
     file_contents=$(base64 -w 0 "$file_name")
 
     # Create the JSON body
     json_body=$(cat <<EOF
 {
-    "fileName": "$file_name",
-    "type": "image/jpg",
+    "fileName": "$timestamped_file_name",
+    "type": "image/jpeg",
     "fileContent": "$file_contents"
 }
 EOF
 )
 
-    # Print the JSON body
-    echo "$json_body"
-
     # Make the request
     result=$(curl -X POST -H "Content-Type: application/json" -d "$json_body" "$url")
-
-    # Print the result
-    echo "$result"
-    status_code=$(echo "$result" | awk '{print $NF}')
-    echo "Status code: $status_code"
 }
 
 send_alert() {
@@ -57,24 +136,21 @@ send_alert() {
   current_time=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
   payload='{"timestamp": "'$current_time'", "message": "'$error_message'"}'
 
-  echo $payload
+  echo "Sending Alert message $payload" >> $LOG_FOLDER/log.txt
   # Send the alert message using curl or any other HTTP client
   curl -X POST -H "Content-Type: application/json" -d "$payload" "$url"
 }
 
 run_python_script() {
   # Run the Python script and capture the output
-  output=$(python analog_gr_rp.py)
+  output=$(python3 analog_gr_rp.py)
+
+  echo "Python script output $output" >> $LOG_FOLDER/log.txt
 
   expected_lines=3  # Number of expected lines in the output
 
   # Count the number of lines that match the expected pattern
   match_count=$(echo "$output" | grep -c "Current reading: For Image [0-9]+ [0-9]+\.[0-9]+ PSI")
-
-  if [ "$match_count" -ne "$expected_lines" ]; then
-	  echo "Error: Unexpected output format"
-	  return 1
-  fi
 
   # Extract the PSI values from the output
   psi1=$(echo "$output" | grep "Image 1" | awk '{print $6}')
@@ -82,8 +158,8 @@ run_python_script() {
   psi3=$(echo "$output" | grep "Image 3" | awk '{print $6}')
 
   if [ -z "$psi1" ] || [ -z "$psi2" ] || [ -z "$psi3" ]; then
-    echo "Error: Invalid output from Python script"
-    send_alert "Error: Invalid output from Python script"
+    echo "Error: Invalid output from Python script" >> $LOG_FOLDER/log.txt
+    send_alert "Error: Unable to read guage meter value"
   else
     python3 d2c.py $psi1 $psi2 $psi3
   fi
@@ -93,26 +169,56 @@ failure_counter=0
 max_failures=2  # Maximum number of failures before sending an alert
 
 while true; do
+
+  # Set the Singapore timezone
+  export TZ='Asia/Singapore'
+  # Get the current time in Singapore
+  folder_time=$(date '+%Y-%m-%d_%H-%M-%S')
+  mkdir -p $TOPDIR/log_$folder_time
+  LOG_FOLDER=$TOPDIR/log_$folder_time
+
+  echo "Starting Image Capture at $folder_time" > $LOG_FOLDER/log.txt
+  # Execute the ifconfig command and capture its output
+  ifconfig_output=$(ifconfig)
+
+  # Write the output to the log file
+  echo "$ifconfig_output" >> $LOG_FOLDER/log.txt
+
   capture_image
   if [ "$?" -gt 0 ]; then
 	  ((failure_counter++))
 	  if [ "$failure_counter" -eq "$max_failures" ]; then
-		  echo "Continuous failures for 1 hour. Sending alert message..."
-		  send_alert "Error: Continous failure for 1 hr"
+		  echo "Continuous failures for 1 hour. Sending alert message..." >> $LOG_FOLDER/log.txt
+		  send_alert "Error: Image doesnt capture for 1 hr"
 		  failure_counter=0
 	  fi
+	  echo "Capture Image failed Sleeping for 3600 sec $folder_time" >> $LOG_FOLDER/log.txt
+  	  cp -rf $TOPDIR/images $LOG_FOLDER
+	  send_folder log_$folder_time
+          sleep 3600
 	  continue
   fi
   sleep 10
+  echo "Starting Python Script at $folder_time" >> $LOG_FOLDER/log.txt
   run_python_script
   if [ "$?" -gt 0 ]; then
 	  ((failure_counter++))
 	  if [ "$failure_counter" -eq "$max_failures" ]; then
-		  echo "Continuous failures for 1 hour. Sending alert message..."
-		  send_alert "Error: Continous failure for 1 hr"
+		  echo "Continuous failures for 1 hour. Sending alert message..." >> $LOG_FOLDER/log.txt
+		  send_alert "Error: Unable to read guage meter value for 1 hr"
 		  failure_counter=0
 	  fi
+	  echo "Python script failed Sleeping for 3600 sec $folder_time" >> $LOG_FOLDER/log.txt
+          cat $TOPDIR/python_log.txt >> $LOG_FOLDER/log.txt
+  	  cp -rf $TOPDIR/images $LOG_FOLDER
+	  send_folder log_$folder_time
+          sleep 3600
 	  continue
   fi
-  sleep 1800
+  echo "Sleeping for 3600 sec $folder_time" >> $LOG_FOLDER/log.txt
+
+  cat $TOPDIR/python_log.txt >> $LOG_FOLDER/log.txt
+  cp -rf $TOPDIR/images $LOG_FOLDER
+  send_folder log_$folder_time
+  sleep 3600
 done

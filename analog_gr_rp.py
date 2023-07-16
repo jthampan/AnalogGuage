@@ -627,7 +627,7 @@ def main():
             angle_range = (float(max_angle) - float(min_angle))
             val_range = (float(max_value) - float(min_value))
             new_value = (((float(final_angle) - float(min_angle)) * val_range) / angle_range) + float(min_value)
-            write_to_log_file("Current reading: For Image %s %s PSI", % (j, new_value))
+            write_to_log_file("Current reading: For Image %s %s PSI" % (j, new_value))
             print(f"Current reading: For Image {j} {new_value} PSI")
 
 if __name__ == '__main__':

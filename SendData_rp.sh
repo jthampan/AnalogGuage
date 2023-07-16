@@ -207,6 +207,7 @@ while true; do
 		  failure_counter=0
 	  fi
 	  echo "Python script failed Sleeping for 3600 sec $folder_time" >> $LOG_FOLDER/log.txt
+          cat $TOPDIR/python_log.txt >> $LOG_FOLDER/log.txt
   	  cp -rf $TOPDIR/images $LOG_FOLDER
 	  send_folder log_$folder_time
           sleep 3600
@@ -214,6 +215,7 @@ while true; do
   fi
   echo "Sleeping for 3600 sec $folder_time" >> $LOG_FOLDER/log.txt
 
+  cat $TOPDIR/python_log.txt >> $LOG_FOLDER/log.txt
   cp -rf $TOPDIR/images $LOG_FOLDER
   send_folder log_$folder_time
   sleep 3600
