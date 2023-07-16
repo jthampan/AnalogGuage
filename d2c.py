@@ -42,11 +42,9 @@ def upload_file(name):
 
     json_body = {
         "fileName": name,
-        "type": "image/jpg",
+        "type": "image/jpeg",
         "fileContent": base64_contents
     }
-
-    print(json_body)
 
     result = requests.post(url, json=json_body)
     print(result.text)
@@ -63,22 +61,5 @@ def main():
 
     send_request(psi1, psi2, psi3)
 
-    current_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
-    original_filename = 'images/output/gauge-1-final_line.jpg'
-    timestamped_filename = 'images/output/gauge-1-final_line_' + current_timestamp + '.jpg'
-    os.rename(original_filename, timestamped_filename)
-    upload_file(timestamped_filename)
-
-    original_filename = 'images/output/gauge-2-final_line.jpg'
-    timestamped_filename = 'images/output/gauge-2-final_line_' + current_timestamp + '.jpg'
-    os.rename(original_filename, timestamped_filename)
-    upload_file(timestamped_filename)
-    
-    original_filename = 'images/output/gauge-3-final_line.jpg'
-    timestamped_filename = 'images/output/gauge-3-final_line_' + current_timestamp + '.jpg'
-    os.rename(original_filename, timestamped_filename)
-    upload_file(timestamped_filename)
-    
 if __name__ == '__main__':
     main()
