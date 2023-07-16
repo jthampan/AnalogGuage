@@ -118,8 +118,7 @@ def crop_image_using_circle(image_name):
     edges = cv2.Canny(blurred, 50, 150)
     # Detect circles using the HoughCircles function
 
-    #circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, dp=1, minDist=500, param1=200, param2=50, minRadius=0, maxRadius=155)
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, minRadius=50, maxRadius=500)
+    circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, dp=1, minDist=500, param1=200, param2=50, minRadius=0, maxRadius=155)
     
     #if circles is not None:
     #    print("Number of circles detected:", len(circles[0]))
@@ -154,10 +153,21 @@ def get_user_input(image_name):
     #min_value = input('Min value: ')  # usually zero
     #max_value = input('Max value: ')  # maximum reading of the gauge
 
-    min_angle =30 
-    max_angle =330
-    min_value = 0
-    max_value = 230
+    if image_name == "crop1.jpg":
+        min_angle = 30
+        max_angle = 340
+        min_value = 0
+        max_value = 4000
+    elif image_name == "crop2.jpg":
+        min_angle = 20
+        max_angle = 340
+        min_value = 0
+        max_value = 4000
+    elif image_name == "crop3.jpg":
+        min_angle = 36
+        max_angle = 340
+        min_value = 0
+        max_value = 400
     return min_angle, max_angle, min_value, max_value
 
 def avg_circles(circles, b):
@@ -380,11 +390,11 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type):
     final_line_list = []
 
     # diff1LowerBound and diff1UpperBound determine how close the line should be from the center
-    diff1LowerBound = 0.05
+    diff1LowerBound = 0.12
     diff1UpperBound = 0.7
 
     # diff2LowerBound and diff2UpperBound determine how close the other point of the line should be to the outside of the gauge
-    diff2LowerBound = 0.5
+    diff2LowerBound = 0.35
     diff2UpperBound = 1.0
 
     output = img.copy()
@@ -482,7 +492,7 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
             cv2.imwrite('images/output/gauge-%s-all_line%s.%s' % (gauge_number, i, file_type), img)
    
             # Filter lines based on conditions
-            if ((r * 0.6) <= dist_pt_0 <= (r * 0.9) and ((dist_pt_0 - dist_pt_1) >= 22) and ((r * 0.05) <= dist_pt_1 <= (r * 0.7))):
+            if ((r * 0.4) <= dist_pt_0 <= (r * 0.7) and ((dist_pt_0 - dist_pt_1) >= 22) and ((r * 0.05) <= dist_pt_1 <= (r * 0.7))):
                 filtered_lines.append(lines[i])
                 # Save the filtered line as an image
                 cv2.imwrite('images/output/gauge-%s-filtered_line%s.%s' % (gauge_number, i, file_type), img)
@@ -549,7 +559,7 @@ def main():
     num_images = 1  # Number of images (e.g., meter1.jpeg, meter2.jpeg, etc.)
 
     for i in range(1, num_images + 1):
-        i=5
+        i=89
         image_name = f"meter{i}.jpeg"  # Construct the image name
         image_path = f"images/{image_name}"  # Construct the image path
 
@@ -558,6 +568,8 @@ def main():
 
         # Perform the operations on the image
         num_circles = crop_image_using_circle("meter.jpeg")
+        rotate_image_counterclockwise("crop1.jpg")
+        rotate_image_clockwise("crop2.jpg")
         for j in range(1, num_circles + 1):
             image_name = f"crop{j}.jpg"  # Construct the cropped image name
             min_angle, max_angle, min_value, max_value = get_user_input(image_name)
