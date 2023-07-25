@@ -190,14 +190,14 @@ RP_TEST=0
 BLS_TEST=0
 NUM_OF_METER=0
 if [[ "$1" == "rp" || "$1" == "rp_test" ]]; then
-  if [ "$1" == "rp"];
+  if [ "$1" == "rp" ]; then
     RP=1
   else
     RP_TEST=1
   NUM_OF_METER=1
   fi
 elif [[ "$1" == "bls" || "$1" == "bls_test" ]]; then
-  if [ "$1" == "rp"];
+  if [ "$1" == "rp" ]; then
     BLS=1
   else
     BLS_TEST=1
