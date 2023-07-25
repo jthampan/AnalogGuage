@@ -604,7 +604,7 @@ def main():
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
-    num_images = 1  # Number of images (e.g., meter1.jpeg, meter2.jpeg, etc.)
+    num_images = 88  # Number of images (e.g., meter1.jpeg, meter2.jpeg, etc.)
 
     for i in range(1, num_images + 1):
         # Check if "bls_test" is provided as an argument
@@ -617,7 +617,7 @@ def main():
             shutil.copy(image_path, "images/meter.jpeg")
         # Check if "rp_test" is provided as an argument
         elif "rp_test" in sys.argv:
-            i = 1
+            #i = 1
             image_name = f"meter{i}.jpeg"  # Construct the image name
             image_path = f"rp_test_images/{image_name}"  # Construct the image path
 
