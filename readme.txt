@@ -3,10 +3,10 @@ git status
 git pull
 
 # SendData commands
-./Senddata_combined.sh rp_test
-./Senddata_combined.sh bls_test
-./Senddata_combined.sh rp
-./Senddata_combined.sh bls
+./Senddata.sh rp_test
+./Senddata.sh bls_test
+./Senddata.sh rp
+./Senddata.sh bls
 
 # Running python independently
 python3 analog_gr.py rp 1
