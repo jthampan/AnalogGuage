@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import pytz
 from azure.iot.device import IoTHubDeviceClient, Message
 
-def send_request(psi1):
+def send_request(*psi_values):
     # Get the current time in UTC
     current_time_utc = datetime.utcnow()
 
@@ -19,10 +19,11 @@ def send_request(psi1):
     current_time_sg = tz.localize(current_time_sg)
 
     current_time_str = current_time_sg.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+    
+    readings = [{"meter": str(i + 1), "reading": psi} for i, psi in enumerate(psi_values)]
+
     payload = {
-        "readings": [
-            {"meter": "1", "reading": psi1},
-        ],
+        "readings": readings,
         "timestamp": current_time_str
     }
 
@@ -51,11 +52,10 @@ def upload_file(name):
     file.close()
 
 def main():
-
     # Get the PSI values from the command line arguments
-    psi1 = int(float(sys.argv[1]))
+    psi_values = [int(float(arg)) for arg in sys.argv[1:]]
 
-    send_request(psi1)
+    send_request(*psi_values)
 
 if __name__ == '__main__':
     main()

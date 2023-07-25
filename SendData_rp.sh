@@ -142,30 +142,68 @@ send_alert() {
 }
 
 run_python_script() {
+
+  if [ $RP -eq 1 ]; then
+    arg="rp"
+  elif [ $BLS -eq 1 ]; then
+    arg="bls"
+  elif [ $RP_TEST -eq 1 ]; then
+    arg="rp_test"
+  elif [ $BLS_TEST -eq 1 ]; then
+    arg="bls_test"
+  fi
+
   # Run the Python script and capture the output
-  output=$(python3 analog_gr_rp.py)
+  output=$(python3 analog_gr_combined.py $arg $NUM_OF_METER)
 
   echo "Python script output $output" >> $LOG_FOLDER/log.txt
 
-  expected_lines=1  # Number of expected lines in the output
+  # Define the pattern to match for PSI values
+  psi_pattern="Current reading: For Image [0-9]+ ([0-9]+\.[0-9]+) PSI"
 
-  # Count the number of lines that match the expected pattern
-  match_count=$(echo "$output" | grep -c "Current reading: For Image [0-9]+ [0-9]+\.[0-9]+ PSI")
+  # Find all PSI values using the pattern and store them in an array
+  psi_values=()
+  while read -r line; do
+    if [[ $line =~ $psi_pattern ]]; then
+      psi_values+=("${BASH_REMATCH[1]}")
+    fi
+  done <<< "$output"
 
-  # Extract the PSI values from the output
-  psi1=$(echo "$output" | grep "Image 1" | awk '{print $6}')
+  # Count the number of detected PSI values
+  match_count=${#psi_values[@]}
 
-  if [ -z "$psi1" ]; then
-    echo "Error: Invalid output from Python script" >> $LOG_FOLDER/log.txt
-    send_alert "Error: Unable to read guage meter value"
+  if [ "$match_count" -eq 0 ]; then
+    echo "Error: No PSI values detected in Python script output" >> $LOG_FOLDER/log.txt
+    send_alert "Error: Unable to read gauge meter values"
   else
-    python3 d2c_rp.py $psi1
+    # Call python3 d2c.py with the PSI values as arguments
+    python3 d2c_combined.py "${psi_values[@]}"
   fi
 }
 
 failure_counter=0
 max_failures=2  # Maximum number of failures before sending an alert
 
+RP=0
+BLS=0
+RP_TEST=0
+BLS_TEST=0
+NUM_OF_METER=0
+if [[ "$1" == "rp" || "$1" == "rp_test" ]]; then
+  if [ "$1" == "rp" ]; then
+    RP=1
+  else
+    RP_TEST=1
+  NUM_OF_METER=1
+  fi
+elif [[ "$1" == "bls" || "$1" == "bls_test" ]]; then
+  if [ "$1" == "rp" ]; then
+    BLS=1
+  else
+    BLS_TEST=1
+  NUM_OF_METER=3
+  fi
+fi
 while true; do
 
   # Set the Singapore timezone
@@ -182,7 +220,9 @@ while true; do
   # Write the output to the log file
   echo "$ifconfig_output" >> $LOG_FOLDER/log.txt
 
-  capture_image
+  if [ $RP_TEST -ne 1 ] && [ $BLS_TEST -ne 1 ]; then
+    capture_image
+  fi
   if [ "$?" -gt 0 ]; then
 	  ((failure_counter++))
 	  if [ "$failure_counter" -eq "$max_failures" ]; then
