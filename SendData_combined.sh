@@ -142,8 +142,19 @@ send_alert() {
 }
 
 run_python_script() {
+
+  if [ $RP -eq 1 ]; then
+    arg="rp"
+  elif [ $BLS -eq 1 ]; then
+    arg="bls"
+  elif [ $RP_TEST -eq 1 ]; then
+    arg="rp_test"
+  elif [ $BLS_TEST -eq 1 ]; then
+    arg="bls_test"
+  fi
+
   # Run the Python script and capture the output
-  output=$(python3 analog_gr_rp.py)
+  output=$(python3 analog_gr_combined.py $arg $NUM_OF_METER)
 
   echo "Python script output $output" >> $LOG_FOLDER/log.txt
 
@@ -173,6 +184,26 @@ run_python_script() {
 failure_counter=0
 max_failures=2  # Maximum number of failures before sending an alert
 
+RP=0
+BLS=0
+RP_TEST=0
+BLS_TEST=0
+NUM_OF_METER=0
+if [[ "$1" == "rp" || "$1" == "rp_test" ]]; then
+  if [ "$1" == "rp"];
+    RP=1
+  else
+    RP_TEST=1
+  NUM_OF_METER=1
+  fi
+elif [[ "$1" == "bls" || "$1" == "bls_test" ]]; then
+  if [ "$1" == "rp"];
+    BLS=1
+  else
+    BLS_TEST=1
+  NUM_OF_METER=3
+  fi
+fi
 while true; do
 
   # Set the Singapore timezone
@@ -189,7 +220,9 @@ while true; do
   # Write the output to the log file
   echo "$ifconfig_output" >> $LOG_FOLDER/log.txt
 
-  capture_image
+  if [ $RP_TEST -ne 1 ] && [ $BLS_TEST -ne 1 ]; then
+    capture_image
+  fi
   if [ "$?" -gt 0 ]; then
 	  ((failure_counter++))
 	  if [ "$failure_counter" -eq "$max_failures" ]; then
