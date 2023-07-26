@@ -605,12 +605,17 @@ def main():
 
     num_images = 1  # Number of images (e.g., meter1.jpeg, meter2.jpeg, etc.)
 
-    for arg in sys.argv:
-        print(arg)
+    # Get all command-line arguments
+    args = sys.argv
+
+    # Concatenate the arguments into a single string
+    log_message = ' '.join(args)
+    write_to_log_file(log_message)
+
     for i in range(1, num_images + 1):
         # Check if "bls_test" is provided as an argument
         if "bls_test" in sys.argv:
-            print("Starting bls_test")
+            write_to_log_file("Starting bls_test")
             i = 89
             image_name = f"meter{i}.jpeg"  # Construct the image name
             image_path = f"bls_test_images/{image_name}"  # Construct the image path
@@ -619,7 +624,7 @@ def main():
             shutil.copy(image_path, "images/meter.jpeg")
         # Check if "rp_test" is provided as an argument
         elif "rp_test" in sys.argv:
-            print("Starting rp_test")
+            write_to_log_file("Starting rp_test")
             i = 1
             image_name = f"meter{i}.jpeg"  # Construct the image name
             image_path = f"rp_test_images/{image_name}"  # Construct the image path
@@ -627,7 +632,7 @@ def main():
             # Copy the image to "images/meter.jpeg"
             shutil.copy(image_path, "images/meter.jpeg")
         else:
-            print("Starting normal test")
+            write_to_log_file("Starting normal test")
 
         write_to_log_file("Starting Test meter%s.jpeg" % (i))
         write_to_log_file("==========================")
