@@ -11,5 +11,5 @@ git pull
 # Running python independently
 python3 analog_gr.py rp 1
 python3 analog_gr.py rp_test 1
-python3 analog_gr.py bls 1
-python3 analog_gr.py bls_test 1
+python3 analog_gr.py bls 3
+python3 analog_gr.py bls_test 3

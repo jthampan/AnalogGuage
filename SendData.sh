@@ -153,8 +153,9 @@ run_python_script() {
     arg="bls_test"
   fi
 
+   echo "ARG $arg Number of meter $NUM_OF_METER"
   # Run the Python script and capture the output
-  output=$(python3 analog_gr_combined.py $arg $NUM_OF_METER)
+  output=$(python3 analog_gr.py $arg $NUM_OF_METER)
 
   echo "Python script output $output" >> $LOG_FOLDER/log.txt
 
@@ -177,7 +178,7 @@ run_python_script() {
     send_alert "Error: Unable to read gauge meter values"
   else
     # Call python3 d2c.py with the PSI values as arguments
-    python3 d2c_combined.py "${psi_values[@]}"
+    python3 d2c.py "${psi_values[@]}"
   fi
 }
 
@@ -197,7 +198,7 @@ if [[ "$1" == "rp" || "$1" == "rp_test" ]]; then
   NUM_OF_METER=1
   fi
 elif [[ "$1" == "bls" || "$1" == "bls_test" ]]; then
-  if [ "$1" == "rp" ]; then
+  if [ "$1" == "bls" ]; then
     BLS=1
   else
     BLS_TEST=1
