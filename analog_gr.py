@@ -185,9 +185,9 @@ def get_user_input(image_name, sys_argv):
             max_value = 400
     else:
         min_angle =30
-        max_angle =330
+        max_angle =340
         min_value = 0
-        max_value = 230
+        max_value = 4000
     write_to_log_file("min_angle %s max_angle %s min_value %s max_value %s" % (min_angle, max_angle, min_value, max_value))
     return min_angle, max_angle, min_value, max_value
 
@@ -309,10 +309,10 @@ def find_and_draw_circle(image_path, gauge_number, file_type):
     # int(height*0.35) minRadius: Minimum circle radius.
     # int(height*0.48) maxRadius: Maximum circle radius.
 
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 100, np.array([]), 100, 50, int(height * 0.35),
-                               int(height * 0.48))
+    #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 100, np.array([]), 100, 50, int(height * 0.35),
+    #                           int(height * 0.48))
 
-    #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, minRadius=50, maxRadius=500)
+    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=500, param1=200, param2=50, minRadius=0, maxRadius=150)
     #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, int(height * 0.35), int(height * 0.48))
 
     if circles is not None:
@@ -423,7 +423,7 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type, sys
         diff1UpperBound = 0.7
 
         # diff2LowerBound and diff2UpperBound determine how close the other point of the line should be to the outside of the gauge
-        diff2LowerBound = 0.5
+        diff2LowerBound = 0.35
         diff2UpperBound = 1.0
 
     output = img.copy()
@@ -502,8 +502,8 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
     # Set the threshold values for Hough Line Transform
     rho = 3
     theta = np.pi / 180
-    min_line_length = 20
-    max_line_gap = 2
+    min_line_length = 10
+    max_line_gap = 1
 
     # Perform Hough Line Transform
     lines = cv2.HoughLinesP(edges, rho=rho, theta=theta, threshold=threshold,
@@ -513,7 +513,7 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
 
     filtered_lines = []
 
-    write_to_log_file("Filtering lines based on r * 0.6 <= dist_pt_0 <= r * 0.9 and dist_pt_0 - dist_pt_1 >= 22 and r * 0.05 <= dist_pt_1 <= r * 0.7")
+    write_to_log_file("Filtering lines based on (r * 0.6) <= dist_pt_1 <= (r * 0.9) and (dist_pt_1 - dist_pt_0) >= 22 and ((r * 0.05) <= dist_pt_0 <= (r * 0.7))")
     for i in range(0, len(lines)):
         for x1, y1, x2, y2 in lines[i]:
             img = output.copy()
@@ -524,7 +524,7 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
             cv2.imwrite('images/output/all_lines/gauge-%s-all_line%s.%s' % (gauge_number, i, file_type), img)
    
             # Filter lines based on conditions
-            if ((r * 0.4) <= dist_pt_0 <= (r * 0.9) and ((dist_pt_0 - dist_pt_1) >= 22) and ((r * 0.05) <= dist_pt_1 <= (r * 0.7))):
+            if ((r * 0.35) <= dist_pt_1 <= (r * 0.9) and (dist_pt_1 - dist_pt_0) >= 20 and ((r * 0.05) <= dist_pt_0 <= (r * 0.7))):
                 filtered_lines.append(lines[i])
                 # Save the filtered line as an image
                 cv2.imwrite('images/output/all_lines/gauge-%s-filtered_line%s.%s' % (gauge_number, i, file_type), img)
@@ -653,6 +653,7 @@ def main():
         if "bls" in sys.argv or "bls_test" in sys.argv:
             rotate_image_counterclockwise("crop1.jpg")
             rotate_image_clockwise("crop2.jpg")
+        rotate_image_counterclockwise("crop1.jpg")
         for j in range(1, num_circles_to_detect + 1):
             image_name = f"crop{j}.jpg"  # Construct the cropped image name
             min_angle, max_angle, min_value, max_value = get_user_input(image_name, sys.argv)
