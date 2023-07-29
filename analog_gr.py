@@ -74,6 +74,8 @@ def rotate_image_counterclockwise(image_name):
     # Define the angle of rotation
     angle = 30
 
+    write_to_log_file("Rotate %s counterclockwise by 30 degree" %(image_name))
+
     # Get the dimensions of the image
     (h, w) = img.shape[:2]
 
@@ -97,6 +99,8 @@ def rotate_image_clockwise(image_name):
     # Define the angle of rotation
     angle = 30
 
+    write_to_log_file("Rotate %s clockwise by 30 degree" %(image_name))
+
     # Get the dimensions of the image
     (h, w) = img.shape[:2]
 
@@ -112,6 +116,23 @@ def rotate_image_clockwise(image_name):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
+def crop_image_horizontally(image_name, crop_percentage):
+    # Load the image
+    image = cv2.imread('images/%s' % (image_name))
+
+    # Get image dimensions
+    height, width = image.shape[:2]
+
+    # Calculate the y-coordinate where to crop based on the percentage
+    y_coordinate = int(height * (1 - crop_percentage / 100))
+
+    # Perform the cropping operation
+    cropped_image = image[:y_coordinate, :]
+
+    cv2.imwrite('images/cropped.jpg', cropped_image)
+
+    return cropped_image
+
 def crop_image_using_circle(image_name, parameters_list, num_circles_to_detect):
     for params in parameters_list:
         # Load the image
@@ -121,10 +142,14 @@ def crop_image_using_circle(image_name, parameters_list, num_circles_to_detect):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         # Apply Gaussian blur to reduce noise
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        #blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+        #cv2.imwrite('images/blur_circ_detected.jpg', blurred)
 
         # Apply Canny edge detection to detect edges
-        edges = cv2.Canny(blurred, 50, 150)
+        edges = cv2.Canny(gray, 100, 200)
+
+        cv2.imwrite('images/edges_detected.jpg', edges)
 
         # Detect circles using the HoughCircles function
         circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, dp=1, minDist=params[0], param1=params[1], param2=params[2], minRadius=params[3], maxRadius=params[4])
@@ -144,11 +169,18 @@ def crop_image_using_circle(image_name, parameters_list, num_circles_to_detect):
             # Draw the circles on the original image
             for (x, y, r) in circles[0]:
                 cv2.circle(img, (x, y), r, (0, 255, 0), 2)
+            
             # Crop and save each circle
             for i in range(len(circles[0])):
                 x, y, r = circles[0][i]
-                cropped = img[y - r:y + r, x - r:x + r]
+                
+                # Calculate the offset as 20% of the circle's radius
+                offset = int(r * 0.1)
+                
+                cropped = img[y - (r + offset):y + (r + offset), x - (r + offset):x + (r + offset)]
                 cv2.imwrite('images/crop' + str(i + 1) + '.jpg', cropped)
+                cv2.imwrite('images/crop_before_rotate' + str(i + 1) + '.jpg', cropped)
+                write_to_log_file("Cropped image: %s, x=%s, y=%s, r=%s" % ('images/crop' + str(i + 1) + '.jpg', x, y, r))
             # Save the image with circles drawn
             cv2.imwrite('images/circles_detected.jpg', img)
 
@@ -169,20 +201,20 @@ def get_user_input(image_name, sys_argv):
 
     if "bls" in sys_argv or "bls_test" in sys_argv:
         if image_name == "crop1.jpg":
-            min_angle = 30
-            max_angle = 340
+            min_angle = 25
+            max_angle = 335
             min_value = 0
-            max_value = 4000
+            max_value = 400
         elif image_name == "crop2.jpg":
             min_angle = 20
             max_angle = 340
             min_value = 0
             max_value = 4000
         elif image_name == "crop3.jpg":
-            min_angle = 36
+            min_angle = 30
             max_angle = 340
             min_value = 0
-            max_value = 400
+            max_value = 4000
     else:
         min_angle =30
         max_angle =340
@@ -285,7 +317,7 @@ def draw_pts_and_text_in_img_to_show_deg(img, x, y, r, image_path, gauge_number,
     return img;
 
 
-def find_and_draw_circle(image_path, gauge_number, file_type):
+def find_and_draw_circle(image_path, gauge_number, file_type, params):
     img = cv2.imread(image_path)
     output = img.copy()
     height, width = img.shape[:2]
@@ -294,25 +326,16 @@ def find_and_draw_circle(image_path, gauge_number, file_type):
 
     # Convert the image to gray scale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+    #edges = cv2.Canny(gray, 100, 200)
 
-    # detect circles
-    # restricting the search from 35-48% of the possible radii gives fairly good results across different samples.
-    # 1 - dp value, larger this value, smaller the accumulator array become
-    # 20 - minDist between the center(x,y) of detected circles
-    #      if minDist is too small, multiple circles maybe falsely detected
-    #      if minDist is large some circles mayn't be detected
-    # 100 - param1 Canny edge detection requires two parameters — minVal and maxVal.
-    #       Param1 is the higher threshold of the two. The second one is set as Param1/2.
-    # 50  - param2, this is the accumulator threshold for the candidate detected circles.
-    #       By increasing this threshold value, we can ensure that only the best circles,
-    #       corresponding to larger accumulator values, are returned.
-    # int(height*0.35) minRadius: Minimum circle radius.
-    # int(height*0.48) maxRadius: Maximum circle radius.
+    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=params[0], param1=params[1], param2=params[2], minRadius=params[3], maxRadius=params[4])
 
+    #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=150, param1=100, param2=50, minRadius=30, maxRadius=100)
     #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 100, np.array([]), 100, 50, int(height * 0.35),
     #                           int(height * 0.48))
 
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=500, param1=200, param2=50, minRadius=0, maxRadius=150)
+    #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=500, param1=200, param2=50, minRadius=0, maxRadius=150)
     #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, int(height * 0.35), int(height * 0.48))
 
     if circles is not None:
@@ -356,6 +379,7 @@ def find_and_draw_circle(image_path, gauge_number, file_type):
             cv2.circle(img, (a, b), 1, (0, 0, 255), 3)
             cv2.imwrite('images/output/gauge-%s-circles-detected.%s' % (gauge_number, file_type), img)
 
+        write_to_log_file("find_and_draw_circle image: %s, x=%s, y=%s, r=%s" % (image_path, a, b, r))
         return img, a, b, r
 
 
@@ -494,37 +518,50 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
     img = cv2.imread(image_path)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    threshold = 100
-    # Apply Canny edge detection
-    edges = cv2.Canny(gray, threshold, threshold * 2)
-
+    th, edges = cv2.threshold(gray, 175, 255, cv2.THRESH_BINARY_INV);
     cv2.imwrite('images/output/gauge-%s-dst.%s' % (gauge_number, file_type), edges)
     # Set the threshold values for Hough Line Transform
     rho = 3
     theta = np.pi / 180
-    min_line_length = 10
-    max_line_gap = 1
+    min_line_length = 20
+    max_line_gap = 5
 
     # Perform Hough Line Transform
-    lines = cv2.HoughLinesP(edges, rho=rho, theta=theta, threshold=threshold,
+    # threshold - highher value help to filter out weaker ones
+    lines = cv2.HoughLinesP(edges, rho=rho, theta=theta, threshold=100,
                             minLineLength=min_line_length, maxLineGap=max_line_gap)
 
     output = img.copy()
 
     filtered_lines = []
 
-    write_to_log_file("Filtering lines based on (r * 0.6) <= dist_pt_1 <= (r * 0.9) and (dist_pt_1 - dist_pt_0) >= 22 and ((r * 0.05) <= dist_pt_0 <= (r * 0.7))")
+    write_to_log_file("Filtering lines based on (r * 0.4) <= dist_pt_higher <= (r * 0.9) and (dist_pt_higher - dist_pt_lower) >= 15 and ((r * 0.05) <= dist_pt_lower <= (r * 0.7))")
     for i in range(0, len(lines)):
         for x1, y1, x2, y2 in lines[i]:
             img = output.copy()
             dist_pt_0 = dist_2_pts(x, y, x1, y1)
             dist_pt_1 = dist_2_pts(x, y, x2, y2)
-            write_to_log_file("get_all_lines dist_pt_0=%s dist_pt_1=%s radius %s name all_line%s.%s" % (dist_pt_0, dist_pt_1, r, i, file_type))
-            cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+            # Skip processing the line if dist_pt_0 or dist_pt_1 is greater than the radius (r)
+            if dist_pt_0 > r or dist_pt_1 > r:
+                continue
+            # Determine the higher distance based on (x1, y1) and (x2, y2) proximity to the circle's radius
+            if dist_pt_1 < dist_pt_0:
+                dist_pt_higher = dist_pt_0
+                dist_pt_lower = dist_pt_1
+            else:
+                dist_pt_higher = dist_pt_1
+                dist_pt_lower = dist_pt_0
+            write_to_log_file("get_all_lines %s <= dist_pt_higher=%s <= %s and %s >= 15 and %s <= 45 and %s <= dist_pt_lower=%s <= %s radius %s name all_line%s.%s" % ((r * 0.4), dist_pt_higher, (r * 0.9), (dist_pt_higher - dist_pt_lower), (dist_pt_higher - dist_pt_lower), (r * 0.05), dist_pt_lower, (r * 0.4), r, i, file_type))
+            if dist_pt_higher == dist_pt_0:
+                cv2.line(img, (x2, y2), (x1, y1), (0, 255, 0), 2)
+            else:
+                cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv2.imwrite('images/output/all_lines/gauge-%s-all_line%s.%s' % (gauge_number, i, file_type), img)
    
             # Filter lines based on conditions
-            if ((r * 0.35) <= dist_pt_1 <= (r * 0.9) and (dist_pt_1 - dist_pt_0) >= 20 and ((r * 0.05) <= dist_pt_0 <= (r * 0.7))):
+            if ((r * 0.4) <= dist_pt_higher <= (r * 0.9) and (dist_pt_higher - dist_pt_lower) >= 15 and (dist_pt_higher - dist_pt_lower) <= 45 and ((r * 0.05) <= dist_pt_lower <= (r * 0.4))):
+                write_to_log_file("Filtered lines name all_line%s.%s" % (i, file_type))
                 filtered_lines.append(lines[i])
                 # Save the filtered line as an image
                 cv2.imwrite('images/output/all_lines/gauge-%s-filtered_line%s.%s' % (gauge_number, i, file_type), img)
@@ -637,11 +674,20 @@ def main():
         write_to_log_file("Starting Test meter%s.jpeg" % (i))
         write_to_log_file("==========================")
 
+        # minDist - large some circles maynot be detected
+        #          - small some false circles get detected
+        # param1, param2, for Canny edge detection, param2 is param1/2
+        # minRadius, maxRadius
         crop_parameters_list = [
             [200, 200, 100, 50, 500],
             [500, 200, 50, 0, 155],
+            [500, 200, 50, 0, 500],
+            [150, 100, 50, 30, 100],
             # Add more parameter combinations as needed
         ]
+
+        cropped_image = crop_image_horizontally("meter.jpeg", 50)
+        shutil.copy("images/cropped.jpg", "images/meter.jpeg")
 
         num_circles_to_detect = int(sys.argv[-1])
         detected_params = crop_image_using_circle("meter.jpeg", crop_parameters_list, num_circles_to_detect)
@@ -651,9 +697,8 @@ def main():
             write_to_log_file("Circle not detected with any parameter combination.")
 
         if "bls" in sys.argv or "bls_test" in sys.argv:
-            rotate_image_counterclockwise("crop1.jpg")
+            rotate_image_counterclockwise("crop3.jpg")
             rotate_image_clockwise("crop2.jpg")
-        rotate_image_counterclockwise("crop1.jpg")
         for j in range(1, num_circles_to_detect + 1):
             image_name = f"crop{j}.jpg"  # Construct the cropped image name
             min_angle, max_angle, min_value, max_value = get_user_input(image_name, sys.argv)
@@ -681,7 +726,7 @@ def main():
             for f in files:
                 os.remove(f)
 
-            img, x, y, r = find_and_draw_circle(image_path, gauge_number, file_type)
+            img, x, y, r = find_and_draw_circle(image_path, gauge_number, file_type, detected_params)
             img = draw_pts_and_text_in_img_to_show_deg(img, x, y, r, image_path, gauge_number, file_type)
             lines = get_all_lines(image_path, gauge_number, file_type, x, y, r)
             no_of_lines = len(lines)
