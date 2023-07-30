@@ -12,6 +12,10 @@ import requests
 from datetime import datetime, timedelta
 import pytz
 import shutil
+import argparse
+
+# Define args as a global variable
+args = None
 
 def write_to_log_file(log_message):
     log_file_path = 'python_log.txt'
@@ -141,18 +145,15 @@ def crop_image_using_circle(image_name, parameters_list, num_circles_to_detect):
         # Convert the image to grayscale
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        # Apply Gaussian blur to reduce noise
-        #blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-
-        #cv2.imwrite('images/blur_circ_detected.jpg', blurred)
-
         # Apply Canny edge detection to detect edges
         edges = cv2.Canny(gray, 100, 200)
-
         cv2.imwrite('images/edges_detected.jpg', edges)
 
-        # Detect circles using the HoughCircles function
-        circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, dp=1, minDist=params[0], param1=params[1], param2=params[2], minRadius=params[3], maxRadius=params[4])
+        binary = cv2.adaptiveThreshold(edges, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
+        cv2.imwrite('images/binary_detected.jpg', binary)
+        
+	# Detect circles using the HoughCircles function
+        circles = cv2.HoughCircles(binary, cv2.HOUGH_GRADIENT, dp=1, minDist=params[0], param1=params[1], param2=params[2], minRadius=params[3], maxRadius=params[4])
 
         if circles is not None:
             write_to_log_file("Number of circles detected after crop: %s" % (len(circles[0])))
@@ -163,7 +164,7 @@ def crop_image_using_circle(image_name, parameters_list, num_circles_to_detect):
         write_to_log_file("Tested parameters: minDist={}, param1={}, param2={}, minRadius={}, maxRadius={}".format(*params))
 
         # If the desired number of circles is detected, return the parameters and draw the circles
-        if circles is not None and len(circles[0]) == num_circles_to_detect:
+        if circles is not None:
             # Convert the (x, y) coordinates and radius of the circles to integers
             circles = circles.astype(int)
             # Draw the circles on the original image
@@ -188,7 +189,8 @@ def crop_image_using_circle(image_name, parameters_list, num_circles_to_detect):
             cv2.destroyAllWindows()
 
             # Return the parameters that resulted in successful detection
-            return params
+            if len(circles[0]) == num_circles_to_detect:
+                return params
 
     # If no circles are found with any parameter combination, return None
     return None
@@ -199,7 +201,9 @@ def get_user_input(image_name, sys_argv):
     #min_value = input('Min value: ')  # usually zero
     #max_value = input('Max value: ')  # maximum reading of the gauge
 
-    if "bls" in sys_argv or "bls_test" in sys_argv:
+    global args  # Access the global args variable
+
+    if args.test_mode in ['bls', 'bls_test']:
         if image_name == "crop1.jpg":
             min_angle = 25
             max_angle = 335
@@ -432,11 +436,13 @@ def dist_2_pts(x1, y1, x2, y2):
 
 # remove all lines outside a given radius
 def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type, sys_argv):
+    global args  # Access the global args variable
+
     final_line_list = []
 
     # diff1LowerBound and diff1UpperBound determine how close the line should be from the center
-    if "bls" in sys_argv or "bls_test" in sys_argv:
-        diff1LowerBound = 0.12
+    if args.test_mode in ['bls', 'bls_test']:
+        diff1LowerBound = 0.05
         diff1UpperBound = 0.7
 
         # diff2LowerBound and diff2UpperBound determine how close the other point of the line should be to the outside of the gauge
@@ -519,12 +525,14 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     th, edges = cv2.threshold(gray, 175, 255, cv2.THRESH_BINARY_INV);
+
     cv2.imwrite('images/output/gauge-%s-dst.%s' % (gauge_number, file_type), edges)
+
     # Set the threshold values for Hough Line Transform
     rho = 3
     theta = np.pi / 180
     min_line_length = 20
-    max_line_gap = 5
+    max_line_gap = 3
 
     # Perform Hough Line Transform
     # threshold - highher value help to filter out weaker ones
@@ -535,7 +543,7 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
 
     filtered_lines = []
 
-    write_to_log_file("Filtering lines based on (r * 0.4) <= dist_pt_higher <= (r * 0.9) and (dist_pt_higher - dist_pt_lower) >= 15 and ((r * 0.05) <= dist_pt_lower <= (r * 0.7))")
+    write_to_log_file("Filtering lines based on (r * 0.4) <= dist_pt_higher <= (r * 0.9) and (dist_pt_higher - dist_pt_lower) >= 15 and <=r and ((r * 0.05) <= dist_pt_lower <= (r * 0.7))")
     for i in range(0, len(lines)):
         for x1, y1, x2, y2 in lines[i]:
             img = output.copy()
@@ -552,7 +560,7 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
             else:
                 dist_pt_higher = dist_pt_1
                 dist_pt_lower = dist_pt_0
-            write_to_log_file("get_all_lines %s <= dist_pt_higher=%s <= %s and %s >= 15 and %s <= 45 and %s <= dist_pt_lower=%s <= %s radius %s name all_line%s.%s" % ((r * 0.4), dist_pt_higher, (r * 0.9), (dist_pt_higher - dist_pt_lower), (dist_pt_higher - dist_pt_lower), (r * 0.05), dist_pt_lower, (r * 0.4), r, i, file_type))
+            write_to_log_file("get_all_lines %s <= dist_pt_higher=%s <= %s and %s >= 15 and %s <= %s and %s <= dist_pt_lower=%s <= %s radius %s name all_line%s.%s" % ((r * 0.4), dist_pt_higher, (r * 0.9), (dist_pt_higher - dist_pt_lower), (dist_pt_higher - dist_pt_lower), r,  (r * 0.05), dist_pt_lower, (r * 0.4), r, i, file_type))
             if dist_pt_higher == dist_pt_0:
                 cv2.line(img, (x2, y2), (x1, y1), (0, 255, 0), 2)
             else:
@@ -560,7 +568,7 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
             cv2.imwrite('images/output/all_lines/gauge-%s-all_line%s.%s' % (gauge_number, i, file_type), img)
    
             # Filter lines based on conditions
-            if ((r * 0.4) <= dist_pt_higher <= (r * 0.9) and (dist_pt_higher - dist_pt_lower) >= 15 and (dist_pt_higher - dist_pt_lower) <= 45 and ((r * 0.05) <= dist_pt_lower <= (r * 0.4))):
+            if ((r * 0.4) <= dist_pt_higher <= (r * 0.9) and (dist_pt_higher - dist_pt_lower) >= 15 and (dist_pt_higher - dist_pt_lower) <= r and ((r * 0.05) <= dist_pt_lower <= (r * 0.4))):
                 write_to_log_file("Filtered lines name all_line%s.%s" % (i, file_type))
                 filtered_lines.append(lines[i])
                 # Save the filtered line as an image
@@ -615,9 +623,31 @@ def get_all_lines1(image_path, gauge_number, file_type):
 
     return lines
 
+# Global crop_parameters_list
+# minDist - large some circles maynot be detected
+#         - small some false circles get detected
+# param1, param2, for Canny edge detection, param2 is param1/2
+# minRadius, maxRadius
+crop_parameters_list = [
+    [200, 200, 100, 50, 500],
+    [500, 200, 50, 0, 155],
+    [400, 200, 50, 0, 155],
+    [300, 200, 50, 0, 155],
+    [500, 200, 50, 0, 500],
+    [150, 100, 50, 30, 100],
+    [400, 200, 100, 30, 170],
+    # Add more parameter combinations as needed
+]
+
 def main():
 
+    global args  # Access the global args variable
+
     files = glob.glob('images/crop*')
+    for f in files:
+        os.remove(f)
+
+    files = glob.glob('images/*.jpg')
     for f in files:
         os.remove(f)
 
@@ -640,27 +670,38 @@ def main():
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
-    num_images = 1  # Number of images (e.g., meter1.jpeg, meter2.jpeg, etc.)
+    parser = argparse.ArgumentParser(description='Analog Gauge Image Processing')
 
-    # Get all command-line arguments
-    args = sys.argv
+    parser.add_argument('--test_mode', choices=['bls', 'rp', 'bls_test', 'rp_test'], default='bls', help='Test mode')
+    parser.add_argument('--num_of_meter', type=int, choices=[1, 2, 3], default=3, help='Number of meters (1/2/3)')
+    parser.add_argument('--crop_horiz', type=int, default=None, help='Crop horizontally by a percentage value')
+    parser.add_argument('--bright_thresh', type=int, default=150, help='Brightness threshold value default is 150')
+    parser.add_argument('--rotate', type=int, default=0, choices=[0, 1], help='Rotate images: 0 (no) or 1 (yes)')
+    parser.add_argument('--meter_name', type=str, default=None, help='Name of the meter image to use')
+
+    args = parser.parse_args()
+    all_args = sys.argv
 
     # Concatenate the arguments into a single string
-    log_message = ' '.join(args)
+    log_message = ' '.join(all_args)
     write_to_log_file(log_message)
+
+    num_images = 1  # Number of images (e.g., meter1.jpeg, meter2.jpeg, etc.)
 
     for i in range(1, num_images + 1):
         # Check if "bls_test" is provided as an argument
-        if "bls_test" in sys.argv:
+        if args.test_mode == 'bls_test':
             write_to_log_file("Starting bls_test")
-            i = 89
-            image_name = f"meter{i}.jpeg"  # Construct the image name
+            if args.meter_name:
+                image_name = args.meter_name
+            else:
+                image_name = f"meter{i}.jpeg"
             image_path = f"bls_test_images/{image_name}"  # Construct the image path
 
             # Copy the image to "images/meter.jpeg"
             shutil.copy(image_path, "images/meter.jpeg")
         # Check if "rp_test" is provided as an argument
-        elif "rp_test" in sys.argv:
+        elif args.test_mode == 'rp_test':
             write_to_log_file("Starting rp_test")
             i = 1
             image_name = f"meter{i}.jpeg"  # Construct the image name
@@ -674,31 +715,22 @@ def main():
         write_to_log_file("Starting Test meter%s.jpeg" % (i))
         write_to_log_file("==========================")
 
-        # minDist - large some circles maynot be detected
-        #          - small some false circles get detected
-        # param1, param2, for Canny edge detection, param2 is param1/2
-        # minRadius, maxRadius
-        crop_parameters_list = [
-            [200, 200, 100, 50, 500],
-            [500, 200, 50, 0, 155],
-            [500, 200, 50, 0, 500],
-            [150, 100, 50, 30, 100],
-            # Add more parameter combinations as needed
-        ]
 
-        cropped_image = crop_image_horizontally("meter.jpeg", 50)
-        shutil.copy("images/cropped.jpg", "images/meter.jpeg")
+        if args.crop_horiz is not None:
+            cropped_image = crop_image_horizontally("meter.jpeg", args.crop_horiz)
+            shutil.copy("images/cropped.jpg", "images/meter.jpeg")
 
-        num_circles_to_detect = int(sys.argv[-1])
+        num_circles_to_detect = args.num_of_meter 
         detected_params = crop_image_using_circle("meter.jpeg", crop_parameters_list, num_circles_to_detect)
         if detected_params is not None:
             write_to_log_file("Circle detected! Parameters:")
         else:
             write_to_log_file("Circle not detected with any parameter combination.")
 
-        if "bls" in sys.argv or "bls_test" in sys.argv:
+        if args.rotate == 1:
             rotate_image_counterclockwise("crop3.jpg")
             rotate_image_clockwise("crop2.jpg")
+
         for j in range(1, num_circles_to_detect + 1):
             image_name = f"crop{j}.jpg"  # Construct the cropped image name
             min_angle, max_angle, min_value, max_value = get_user_input(image_name, sys.argv)
@@ -707,7 +739,7 @@ def main():
             write_to_log_file("==========================")
 
             image_path = f"images/{image_name}"
-            brightness_threshold = 150
+            brightness_threshold = args.bright_thresh
 
             average_brightness, is_dark = is_image_dark(image_name, brightness_threshold)
 
