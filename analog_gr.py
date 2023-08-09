@@ -598,6 +598,7 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
     output = img.copy()
 
     filtered_lines = []
+    new_filtered_lines = []
     longest_line_length = 0
     longest_line_coordinates = None
     longest_line = None
@@ -626,7 +627,6 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
             if dist_pt_higher == dist_pt_0:
                 cv2.line(img, (x2, y2), (x1, y1), (0, 255, 0), 2)
                 line_length = dist_2_pts(x2, y2, x1, y1)
-                write_to_log_file(f"x2={x2}, y2={y2}, x1={x1}, y1={y1}, line_length={line_length} dist_pt_higher == dist_pt_0 name all_line{i}.{file_type}")
                 
 		# Update the longest line information if the current line is longer
                 if line_length > longest_line_length:
@@ -636,7 +636,6 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
             else:
                 cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 line_length = dist_2_pts(x1, y1, x2, y2)
-                write_to_log_file(f"x1={x1}, y1={y1}, x2={x2}, y2={y2}, line_length={line_length} dist_pt_higher == dist_pt_1 name all_line{i}.{file_type}")
                 
 		# Update the longest line information if the current line is longer
                 if line_length > longest_line_length:
@@ -659,6 +658,7 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
                         longest_filtered_line_coordinates = ((x2, y2), (x1, y1))
                     else:
                         longest_filtered_line_coordinates = ((x1, y1), (x2, y2))
+                    write_to_log_file("Longest Filtered lines name all_line%s.%s" % (i, file_type))
 
                 # Save the filtered line as an image
                 cv2.imwrite('images/output/all_lines/gauge-%s-filtered_line%s.%s' % (gauge_number, i, file_type), img)
@@ -683,10 +683,11 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
         filtered_lines.insert(0, longest_filtered_line)
         write_to_log_file(f"Longest filtered line: (x1={x1}, y1={y1}) to (x2={x2}, y2={y2}), Length: {longest_line_length:.2f}")
 
-
+    new_filtered_lines.append(longest_filtered_line)
+    new_filtered_lines.append(longest_line)
 
     write_to_log_file("\n")
-    return filtered_lines
+    return new_filtered_lines
 
 def get_all_lines1(image_path, gauge_number, file_type):
     img = cv2.imread(image_path)
@@ -798,7 +799,7 @@ def main():
     log_message = ' '.join(all_args)
     write_to_log_file(log_message)
 
-    num_images = 88  # Number of images (e.g., meter1.jpeg, meter2.jpeg, etc.)
+    num_images = 1  # Number of images (e.g., meter1.jpeg, meter2.jpeg, etc.)
 
     for i in range(1, num_images + 1):
         # Check if "bls_test" is provided as an argument
