@@ -163,6 +163,10 @@ def crop_image_using_circle(image_name, parameters_list, num_circles_to_detect):
         # Log the tested parameters with labels
         write_to_log_file("Tested parameters: minDist={}, param1={}, param2={}, minRadius={}, maxRadius={}".format(*params))
 
+        if circles is not None:
+            if len(circles[0]) != num_circles_to_detect:
+                continue
+
         # If the desired number of circles is detected, return the parameters and draw the circles
         if circles is not None:
             # Convert the (x, y) coordinates and radius of the circles to integers
@@ -204,12 +208,12 @@ def get_user_input(image_name, sys_argv):
     global args  # Access the global args variable
 
     if args.test_mode in ['bls', 'bls_test']:
-        if image_name == "crop1.jpg":
+        if image_name == "crop2.jpg":
             min_angle = 25
             max_angle = 335
             min_value = 0
             max_value = 400
-        elif image_name == "crop2.jpg":
+        elif image_name == "crop1.jpg":
             min_angle = 20
             max_angle = 340
             min_value = 0
@@ -321,6 +325,18 @@ def draw_pts_and_text_in_img_to_show_deg(img, x, y, r, image_path, gauge_number,
     return img;
 
 
+find_and_draw_circle_crop_parameters_list = [
+    [200, 200, 100, 50, 500],
+    [500, 200, 50, 0, 155],
+    [400, 200, 50, 0, 155],
+    [300, 200, 50, 0, 155],
+    [500, 200, 50, 0, 500],
+    [150, 100, 50, 30, 100],
+    [400, 200, 100, 30, 170],
+    # Add more parameter combinations as needed
+]
+
+
 def find_and_draw_circle(image_path, gauge_number, file_type, params):
     img = cv2.imread(image_path)
     output = img.copy()
@@ -341,6 +357,20 @@ def find_and_draw_circle(image_path, gauge_number, file_type, params):
 
     #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=500, param1=200, param2=50, minRadius=0, maxRadius=150)
     #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, int(height * 0.35), int(height * 0.48))
+
+    if circles is not None:
+        write_to_log_file("find_and_draw_circle Number of circles detected: %s" % (len(circles[0])))
+    else:
+        write_to_log_file("find_and_draw_circle No circles detected in the image.")
+
+        # Try different parameters to detect circles
+        for param_set in find_and_draw_circle_crop_parameters_list:
+            circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=param_set[0], param1=param_set[1], param2=param_set[2], minRadius=param_set[3], maxRadius=param_set[4])
+            if circles is not None:
+                write_to_log_file("find_and_draw_circle Circle detected with alternate parameters.")
+                # Draw circles, save image, and return
+                # ...
+                break  # Break the loop since we've found circles with alternate parameters
 
     if circles is not None:
         write_to_log_file("find_and_draw_circle Number of circles detected: %s" % (len(circles[0])))
@@ -433,9 +463,20 @@ def find_angle_between_2_points(x, y, final_line_list):
 def dist_2_pts(x1, y1, x2, y2):
     return np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
+def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type, sys_argv):
+    global args  # Access the global args variable
+
+    output = img.copy()
+    x1, y1, x2, y2 = lines
+    cv2.line(img, (x, y), (x2, y2), (0, 255, 0), 2)
+
+    # for testing purposes, show the line overlayed on the original image
+    cv2.imwrite('images/output/gauge-%s-final_line.%s' % (gauge_number, file_type), img)
+
+    return final_line_list
 
 # remove all lines outside a given radius
-def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type, sys_argv):
+def get_final_line1(img, lines, x, y, r, image_path, gauge_number, file_type, sys_argv):
     global args  # Access the global args variable
 
     final_line_list = []
@@ -477,8 +518,8 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type, sys
                 temp = diff1
                 diff1 = diff2
                 diff2 = temp
-            write_to_log_file("get_final_line diff1 = %s diff1UpperBound * r = %s diff1LowerBound * r = %s" % (diff1, diff1UpperBound * r, diff1LowerBound * r))
-            write_to_log_file("get_final_line diff2 = %s diff2UpperBound * r = %s diff2LowerBound * r = %s" % (diff2, diff2UpperBound * r, diff2LowerBound * r))
+            write_to_log_file("get_final_line diff1 = {:.2f} diff1UpperBound * r = {:.2f} diff1LowerBound * r = {:.2f}".format(diff1, diff1UpperBound * r, diff1LowerBound * r))
+            write_to_log_file("get_final_line diff2 = {:.2f} diff2UpperBound * r = {:.2f} diff2LowerBound * r = {:.2f}".format(diff2, diff2UpperBound * r, diff2LowerBound * r))
 
             # check if line is within an acceptable range
             if ((diff1 < diff1UpperBound * r) and (diff1 > diff1LowerBound * r) and
@@ -542,6 +583,9 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
     output = img.copy()
 
     filtered_lines = []
+    longest_line_length = 0
+    longest_line_coordinates = None
+    longest_line = None
 
     write_to_log_file("Filtering lines based on (r * 0.4) <= dist_pt_higher <= (r * 0.9) and (dist_pt_higher - dist_pt_lower) >= 15 and <=r and ((r * 0.05) <= dist_pt_lower <= (r * 0.7))")
     for i in range(0, len(lines)):
@@ -560,13 +604,30 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
             else:
                 dist_pt_higher = dist_pt_1
                 dist_pt_lower = dist_pt_0
-            write_to_log_file("get_all_lines %s <= dist_pt_higher=%s <= %s and %s >= 15 and %s <= %s and %s <= dist_pt_lower=%s <= %s radius %s name all_line%s.%s" % ((r * 0.4), dist_pt_higher, (r * 0.9), (dist_pt_higher - dist_pt_lower), (dist_pt_higher - dist_pt_lower), r,  (r * 0.05), dist_pt_lower, (r * 0.4), r, i, file_type))
+            write_to_log_file(f"get_all_lines {(r * 0.4):.2f} <= dist_pt_higher={dist_pt_higher:.2f} <= {(r * 0.9):.2f} and {(dist_pt_higher - dist_pt_lower):.2f} >= 15 and {(dist_pt_higher - dist_pt_lower):.2f} <= {r:.2f} and {(r * 0.05):.2f} <= dist_pt_lower={dist_pt_lower:.2f} <= {(r * 0.4):.2f} radius {r:.2f} name all_line{i}.{file_type}")
             if dist_pt_higher == dist_pt_0:
                 cv2.line(img, (x2, y2), (x1, y1), (0, 255, 0), 2)
+                line_length = dist_2_pts(x2, y2, x1, y1)
+                write_to_log_file(f"x2={x2}, y2={y2}, x1={x1}, y1={y1}, line_length={line_length} dist_pt_higher == dist_pt_0 name all_line{i}.{file_type}")
+                
+		# Update the longest line information if the current line is longer
+                if line_length > longest_line_length:
+                    longest_line = lines[i]
+                    longest_line_length = line_length
+                    longest_line_coordinates = ((x2, y2), (x1, y1))
             else:
                 cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                line_length = dist_2_pts(x1, y1, x2, y2)
+                write_to_log_file(f"x1={x1}, y1={y1}, x2={x2}, y2={y2}, line_length={line_length} dist_pt_higher == dist_pt_1 name all_line{i}.{file_type}")
+                
+		# Update the longest line information if the current line is longer
+                if line_length > longest_line_length:
+                    longest_line = lines[i]
+                    longest_line_length = line_length
+                    longest_line_coordinates = ((x1, y1), (x2, y2))
             cv2.imwrite('images/output/all_lines/gauge-%s-all_line%s.%s' % (gauge_number, i, file_type), img)
-   
+  
+
             # Filter lines based on conditions
             if ((r * 0.4) <= dist_pt_higher <= (r * 0.9) and (dist_pt_higher - dist_pt_lower) >= 15 and (dist_pt_higher - dist_pt_lower) <= r and ((r * 0.05) <= dist_pt_lower <= (r * 0.4))):
                 write_to_log_file("Filtered lines name all_line%s.%s" % (i, file_type))
@@ -574,8 +635,25 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
                 # Save the filtered line as an image
                 cv2.imwrite('images/output/all_lines/gauge-%s-filtered_line%s.%s' % (gauge_number, i, file_type), img)
 
+    final_line_list = []
+    # Print the information of the longest line
+    if longest_line_coordinates is not None:
+        (x1, y1), (x2, y2) = longest_line_coordinates
+        img = output.copy()
+        cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv2.imwrite('images/output/all_lines/gauge-%s-longest_line.%s' % (gauge_number, file_type), img)
+
+        img = output.copy()
+        cv2.line(img, (x, y), (x2, y2), (0, 255, 0), 2)
+        cv2.imwrite('images/output/gauge-%s-final_line.%s' % (gauge_number, file_type), img)
+    
+        final_line_list.append([x1, y1, x2, y2])
+
+        filtered_lines.append(longest_line)
+        write_to_log_file(f"Longest line: (x1={x1}, y1={y1}) to (x2={x2}, y2={y2}), Length: {longest_line_length:.2f}")
+
     write_to_log_file("\n")
-    return filtered_lines
+    return final_line_list
 
 def get_all_lines1(image_path, gauge_number, file_type):
     img = cv2.imread(image_path)
@@ -634,6 +712,7 @@ crop_parameters_list = [
     [400, 200, 50, 0, 155],
     [300, 200, 50, 0, 155],
     [500, 200, 50, 0, 500],
+    [200, 100, 50, 40, 60],
     [150, 100, 50, 30, 100],
     [400, 200, 100, 30, 170],
     # Add more parameter combinations as needed
@@ -676,7 +755,7 @@ def main():
     parser.add_argument('--num_of_meter', type=int, choices=[1, 2, 3], default=3, help='Number of meters (1/2/3)')
     parser.add_argument('--crop_horiz', type=int, default=None, help='Crop horizontally by a percentage value')
     parser.add_argument('--bright_thresh', type=int, default=150, help='Brightness threshold value default is 150')
-    parser.add_argument('--rotate', type=int, default=0, choices=[0, 1], help='Rotate images: 0 (no) or 1 (yes)')
+    parser.add_argument('--rotate', nargs='+', default=[], help='Crop image and rotation direction for each crop')    
     parser.add_argument('--meter_name', type=str, default=None, help='Name of the meter image to use')
 
     args = parser.parse_args()
@@ -727,9 +806,18 @@ def main():
         else:
             write_to_log_file("Circle not detected with any parameter combination.")
 
-        if args.rotate == 1:
-            rotate_image_counterclockwise("crop3.jpg")
-            rotate_image_clockwise("crop2.jpg")
+        if args.rotate and len(args.rotate):
+            num_images_to_rotate = len(args.rotate) // 2
+            for j in range(num_images_to_rotate):
+                crop_index = j * 2
+                crop_image_name = args.rotate[crop_index]
+                rotation_direction = args.rotate[crop_index + 1]
+
+                image_file = f"{crop_image_name}.jpg"
+                if rotation_direction == 'clockwise':
+                    rotate_image_clockwise(image_file)
+                elif rotation_direction == 'counterclockwise':
+                    rotate_image_counterclockwise(image_file)
 
         for j in range(1, num_circles_to_detect + 1):
             image_name = f"crop{j}.jpg"  # Construct the cropped image name
@@ -760,10 +848,7 @@ def main():
 
             img, x, y, r = find_and_draw_circle(image_path, gauge_number, file_type, detected_params)
             img = draw_pts_and_text_in_img_to_show_deg(img, x, y, r, image_path, gauge_number, file_type)
-            lines = get_all_lines(image_path, gauge_number, file_type, x, y, r)
-            no_of_lines = len(lines)
-            # print("no_of_lines = %s" % (no_of_lines))
-            final_line_list = get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type, sys.argv)
+            final_line_list = get_all_lines(image_path, gauge_number, file_type, x, y, r)
             final_angle = find_angle_between_2_points(x, y, final_line_list)
             # print("final_angle %s" % (final_angle))
 
