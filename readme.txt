@@ -3,11 +3,11 @@ git status
 git checkout <modified files>
 git pull
 
-# SendData commands
-./Senddata.sh rp_test
-./Senddata.sh bls_test
-./Senddata.sh rp
-./Senddata.sh bls
+# SendData commands, 1st arg test_mode, 2nd arg num of meter, 3rd arg optional sec
+./Senddata.sh rp_test 1
+./Senddata.sh bls_test 1
+./Senddata.sh rp 1
+./Senddata.sh bls 3
 
 # Running python independently
 # Default test_mode bls, num_of_meter 3, crop_horiz None

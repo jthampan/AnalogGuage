@@ -143,17 +143,7 @@ send_alert() {
 
 run_python_script() {
 
-  if [ $RP -eq 1 ]; then
-    arg="rp"
-  elif [ $BLS -eq 1 ]; then
-    arg="bls"
-  elif [ $RP_TEST -eq 1 ]; then
-    arg="rp_test"
-  elif [ $BLS_TEST -eq 1 ]; then
-    arg="bls_test"
-  fi
-
-   echo "ARG $arg Number of meter $NUM_OF_METER"
+  echo "ARG $arg Number of meter $NUM_OF_METER"
   # Run the Python script and capture the output
   output=$(python3 analog_gr.py --test_mode $arg --num_of_meter $NUM_OF_METER)
 
@@ -185,26 +175,14 @@ run_python_script() {
 failure_counter=0
 max_failures=2  # Maximum number of failures before sending an alert
 
-RP=0
-BLS=0
-RP_TEST=0
-BLS_TEST=0
-NUM_OF_METER=0
+arg=$1
+NUM_OF_METER=$2
 
-if [[ "$1" == "rp" || "$1" == "rp_test" ]]; then
-  if [ "$1" == "rp" ]; then
-    RP=1
-  else
-    RP_TEST=1
-  fi
-  NUM_OF_METER=1
-elif [[ "$1" == "bls" || "$1" == "bls_test" ]]; then
-  if [ "$1" == "bls" ]; then
-    BLS=1
-  else
-    BLS_TEST=1
-  fi
-  NUM_OF_METER=3
+# Check if the third argument ($3) is provided
+if [ -n "$3" ]; then
+    SEC="$3"
+else
+    SEC=3600
 fi
 
 while true; do
@@ -223,7 +201,7 @@ while true; do
   # Write the output to the log file
   echo "$ifconfig_output" >> $LOG_FOLDER/log.txt
 
-  if [ $RP_TEST -ne 1 ] && [ $BLS_TEST -ne 1 ]; then
+  if [ $arg != "rp_test" ] && [ $arg != "bls_test" ]; then
     capture_image
   fi
   if [ "$?" -gt 0 ]; then
@@ -236,7 +214,7 @@ while true; do
 	  echo "Capture Image failed Sleeping for 3600 sec $folder_time" >> $LOG_FOLDER/log.txt
   	  cp -rf $TOPDIR/images $LOG_FOLDER
 	  send_folder log_$folder_time
-          sleep 3600
+          sleep $SEC
 	  continue
   fi
   sleep 10
@@ -253,7 +231,7 @@ while true; do
           cat $TOPDIR/python_log.txt >> $LOG_FOLDER/log.txt
   	  cp -rf $TOPDIR/images $LOG_FOLDER
 	  send_folder log_$folder_time
-          sleep 3600
+          sleep $SEC
 	  continue
   fi
   echo "Sleeping for 3600 sec $folder_time" >> $LOG_FOLDER/log.txt
@@ -261,5 +239,5 @@ while true; do
   cat $TOPDIR/python_log.txt >> $LOG_FOLDER/log.txt
   cp -rf $TOPDIR/images $LOG_FOLDER
   send_folder log_$folder_time
-  sleep 3600
+  sleep $SEC
 done
