@@ -71,7 +71,7 @@ def increase_brightness(image_name, alpha, beta):
     adjusted_image = cv2.addWeighted(image, alpha, image, 0, beta)
     return adjusted_image
 
-def rotate_image_counterclockwise(image_name):
+def rotate_image_clockwise(image_name):
     # Load the image
     img = cv2.imread('images/%s' %(image_name))
 
@@ -85,10 +85,9 @@ def rotate_image_counterclockwise(image_name):
 
     # Calculate the rotation matrix
     center = (w // 2, h // 2)
-    M = cv2.getRotationMatrix2D(center, angle, 1.0)
+    M = cv2.getRotationMatrix2D(center, -angle, 1.0)
 
     # Rotate the image counter-clockwise
-    M = cv2.getRotationMatrix2D(center, -angle, 1.0)
     rotated_counter_clockwise = cv2.warpAffine(img, M, (w, h))
 
     # Display the original and rotated images
@@ -96,7 +95,7 @@ def rotate_image_counterclockwise(image_name):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def rotate_image_clockwise(image_name):
+def rotate_image_counterclockwise(image_name):
     # Load the image
     img = cv2.imread('images/%s' %(image_name))
 
@@ -634,9 +633,9 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
                 write_to_log_file("Filtered lines name all_line%s.%s" % (i, file_type))
                 filtered_lines.append(lines[i])
                
-	        
+                write_to_log_file(f"Finding longest_filtered_line name all_line{i}.{file_type} {dist_pt_higher:.2f} >= {(r * 0.5):.2f} and {dist_pt_higher:.2f} <= {(r * 0.9):.2f}")
 		# Update the longest filtered line information if the current line is longer
-                if line_length > longest_filtered_line_length and dist_pt_higher >= (r * 0.5):
+                if line_length > longest_filtered_line_length and dist_pt_higher >= (r * 0.5) and dist_pt_higher <= (r * 0.9):
                     longest_filtered_line = lines[i]
                     longest_filtered_line_length = line_length
                     if dist_pt_higher == dist_pt_0:
