@@ -498,14 +498,14 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type, sys
 
     # diff1LowerBound and diff1UpperBound determine how close the line should be from the center
     if args.test_mode in ['bls', 'bls_test']:
-        diff1LowerBound = 0.05
+        diff1LowerBound = 0
         diff1UpperBound = 0.7
 
         # diff2LowerBound and diff2UpperBound determine how close the other point of the line should be to the outside of the gauge
         diff2LowerBound = 0.35
         diff2UpperBound = 1.0
     else:
-        diff1LowerBound = 0.05
+        diff1LowerBound = 0
         diff1UpperBound = 0.7
 
         # diff2LowerBound and diff2UpperBound determine how close the other point of the line should be to the outside of the gauge
@@ -517,43 +517,25 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type, sys
     write_to_log_file("Filtering lines based on diff1 < diff1UpperBound * r and diff1 > diff1LowerBound * r and")
     write_to_log_file("diff2 < diff2UpperBound * r and diff2 > diff2LowerBound * r")
     for i in range(0, len(lines)):
-        for x1, y1, x2, y2 in lines[i]:
-            diff1 = dist_2_pts(x, y, x1, y1)  # x, y is center of circle
-            diff2 = dist_2_pts(x, y, x2, y2)  # x, y is center of circle
+        if lines[i] is not None:
+            for x1, y1, x2, y2 in lines[i]:
+                diff1 = dist_2_pts(x, y, x1, y1)  # x, y is center of circle
+                diff2 = dist_2_pts(x, y, x2, y2)  # x, y is center of circle
 
-            #print("x1 %s y1 %s x2 %s y2 %s" %(x1, y1, x2, y2))
-            #print("diff1 %s diff2 %s" %(diff1, diff2))
-            #img = output.copy()
-            #img1 = output.copy()
-            #cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            #cv2.imwrite('images/output/gauge-%s-final_line%s.%s' % (gauge_number, i, file_type), img)
-           
-            # set diff1 to be the smaller (closest to the center) of the two), makes the math easier
-            if diff1 > diff2:
-                temp = diff1
-                diff1 = diff2
-                diff2 = temp
-            write_to_log_file("get_final_line diff1 = {:.2f} diff1UpperBound * r = {:.2f} diff1LowerBound * r = {:.2f}".format(diff1, diff1UpperBound * r, diff1LowerBound * r))
-            write_to_log_file("get_final_line diff2 = {:.2f} diff2UpperBound * r = {:.2f} diff2LowerBound * r = {:.2f}".format(diff2, diff2UpperBound * r, diff2LowerBound * r))
+                # set diff1 to be the smaller (closest to the center) of the two), makes the math easier
+                if diff1 > diff2:
+                    temp = diff1
+                    diff1 = diff2
+                    diff2 = temp
+                write_to_log_file("get_final_line diff1 = {:.2f} diff1UpperBound * r = {:.2f} diff1LowerBound * r = {:.2f}".format(diff1, diff1UpperBound * r, diff1LowerBound * r))
+                write_to_log_file("get_final_line diff2 = {:.2f} diff2UpperBound * r = {:.2f} diff2LowerBound * r = {:.2f}".format(diff2, diff2UpperBound * r, diff2LowerBound * r))
 
-            # check if line is within an acceptable range
-            if ((diff1 < diff1UpperBound * r) and (diff1 > diff1LowerBound * r) and
-                (diff2 < diff2UpperBound * r) and (diff2 > diff2LowerBound * r)):
-                line_length = dist_2_pts(x1, y1, x2, y2)
-                #img = output.copy()
-                #img1 = output.copy()
-                #cv2.line(img, (x, y), (x1, y1), (0, 255, 0), 2)
-                #cv2.line(img1, (x, y), (x2, y2), (0, 255, 0), 2)
-                #print("Found a acceptable line line_length: %s" % line_length)
-                #cv2.imwrite('images/output/gauge-%s-final_line%s.%s' % (gauge_number, i, file_type), img)
-                #cv2.imwrite('images/output/gauge-%s-final_line%s_1.%s' % (gauge_number, i, file_type), img1)
-                #print("x1 %s y1 %s x2 %s y2 %s" % (x1, y1, x2, y2))
-                #print("diff1 = %s < diff1UpperBound * r = %s" % (diff1, diff1UpperBound * r))
-                #print("diff1 = %s > diff1LowerBound * r = %s" % (diff1, diff1LowerBound * r))
-                #print("diff2 = %s < diff2UpperBound * r = %s" % (diff2, diff2UpperBound * r))
-                #print("diff2 = %s > diff2LowerBound * r = %s" % (diff2, diff2LowerBound * r))
-                # add to final list
-                final_line_list.append([x1, y1, x2, y2])
+                # check if line is within an acceptable range
+                if ((diff1 < diff1UpperBound * r) and (diff1 > diff1LowerBound * r) and
+                    (diff2 < diff2UpperBound * r) and (diff2 > diff2LowerBound * r)):
+                    # add to final list
+                    write_to_log_file("adding to final line list")
+                    final_line_list.append([x1, y1, x2, y2])
     write_to_log_file("\n")
     # assumes the first line is the best one
     x1 = final_line_list[0][0]
@@ -606,7 +588,7 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
     longest_filtered_line_length = 0
     longest_filtered_line_coordinates = None
 
-    write_to_log_file("Filtering lines based on (r * 0.4) <= dist_pt_higher <= (r * 0.9) and (dist_pt_higher - dist_pt_lower) >= 15 and <=r and ((r * 0.05) <= dist_pt_lower <= (r * 0.7))")
+    write_to_log_file("Filtering lines based on (r * 0.4) <= dist_pt_higher <= (r * 0.96) and (dist_pt_higher - dist_pt_lower) >= 15 and <=r and (dist_pt_lower <= (r * 0.7))")
     for i in range(0, len(lines)):
         for x1, y1, x2, y2 in lines[i]:
             img = output.copy()
@@ -623,7 +605,7 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
             else:
                 dist_pt_higher = dist_pt_1
                 dist_pt_lower = dist_pt_0
-            write_to_log_file(f"get_all_lines {(r * 0.4):.2f} <= dist_pt_higher={dist_pt_higher:.2f} <= {(r * 0.9):.2f} and {(dist_pt_higher - dist_pt_lower):.2f} >= 15 and {(dist_pt_higher - dist_pt_lower):.2f} <= {r:.2f} and {(r * 0.05):.2f} <= dist_pt_lower={dist_pt_lower:.2f} <= {(r * 0.4):.2f} radius {r:.2f} name all_line{i}.{file_type}")
+            write_to_log_file(f"get_all_lines {(r * 0.4):.2f} <= dist_pt_higher={dist_pt_higher:.2f} <= {(r * 0.96):.2f} and {(dist_pt_higher - dist_pt_lower):.2f} >= 15 and {(dist_pt_higher - dist_pt_lower):.2f} <= {r:.2f} and {{dist_pt_lower={dist_pt_lower:.2f}}} <= {(r * 0.4):.2f} radius {r:.2f} name all_line{i}.{file_type}")
             if dist_pt_higher == dist_pt_0:
                 cv2.line(img, (x2, y2), (x1, y1), (0, 255, 0), 2)
                 line_length = dist_2_pts(x2, y2, x1, y1)
@@ -633,6 +615,7 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
                     longest_line = lines[i]
                     longest_line_length = line_length
                     longest_line_coordinates = ((x2, y2), (x1, y1))
+                    write_to_log_file(f"Longest line: (x1={x1}, y1={y1}) to (x2={x2}, y2={y2}), Length: {longest_line_length:.2f} name all_line{i}.{file_type}")
             else:
                 cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 line_length = dist_2_pts(x1, y1, x2, y2)
@@ -642,23 +625,25 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
                     longest_line = lines[i]
                     longest_line_length = line_length
                     longest_line_coordinates = ((x1, y1), (x2, y2))
+                    write_to_log_file(f"Longest line: (x1={x1}, y1={y1}) to (x2={x2}, y2={y2}), Length: {longest_line_length:.2f} name all_line{i}.{file_type}")
             cv2.imwrite('images/output/all_lines/gauge-%s-all_line%s.%s' % (gauge_number, i, file_type), img)
   
 
             # Filter lines based on conditions
-            if ((r * 0.4) <= dist_pt_higher <= (r * 0.9) and (dist_pt_higher - dist_pt_lower) >= 15 and (dist_pt_higher - dist_pt_lower) <= r and ((r * 0.05) <= dist_pt_lower <= (r * 0.4))):
+            if ((r * 0.4) <= dist_pt_higher <= (r * 0.96) and (dist_pt_higher - dist_pt_lower) >= 15 and (dist_pt_higher - dist_pt_lower) <= r and (dist_pt_lower <= (r * 0.4))):
                 write_to_log_file("Filtered lines name all_line%s.%s" % (i, file_type))
                 filtered_lines.append(lines[i])
-                
+               
+	        
 		# Update the longest filtered line information if the current line is longer
-                if line_length > longest_filtered_line_length:
+                if line_length > longest_filtered_line_length and dist_pt_higher >= (r * 0.5):
                     longest_filtered_line = lines[i]
                     longest_filtered_line_length = line_length
                     if dist_pt_higher == dist_pt_0:
                         longest_filtered_line_coordinates = ((x2, y2), (x1, y1))
                     else:
                         longest_filtered_line_coordinates = ((x1, y1), (x2, y2))
-                    write_to_log_file("Longest Filtered lines name all_line%s.%s" % (i, file_type))
+                    write_to_log_file(f"Longest filtered line: (x1={x1}, y1={y1}) to (x2={x2}, y2={y2}), Length: {longest_filtered_line_length:.2f} name all_line{i}.{file_type}")
 
                 # Save the filtered line as an image
                 cv2.imwrite('images/output/all_lines/gauge-%s-filtered_line%s.%s' % (gauge_number, i, file_type), img)
@@ -681,10 +666,14 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
         cv2.imwrite('images/output/all_lines/gauge-%s-longest_filtered_line.%s' % (gauge_number, file_type), img)
 
         filtered_lines.insert(0, longest_filtered_line)
-        write_to_log_file(f"Longest filtered line: (x1={x1}, y1={y1}) to (x2={x2}, y2={y2}), Length: {longest_line_length:.2f}")
+        write_to_log_file(f"Longest filtered line: (x1={x1}, y1={y1}) to (x2={x2}, y2={y2}), Length: {longest_filtered_line_length:.2f}")
 
-    new_filtered_lines.append(longest_filtered_line)
-    new_filtered_lines.append(longest_line)
+    if longest_filtered_line is not None:
+        new_filtered_lines.append(longest_filtered_line)
+
+    # Check if longest_line contains valid coordinates before appending
+    if longest_line is not None:
+        new_filtered_lines.append(longest_line)
 
     write_to_log_file("\n")
     return new_filtered_lines

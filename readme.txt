@@ -24,7 +24,7 @@ python3 analog_gr.py --test_mode bls_test --num_of_meter 1 --crop_horiz 25 --rot
 python3 analog_gr.py --test_mode bls_test --num_of_meter 1 --crop_horiz 25 --rotate crop1 counterclockwise --meter_name meter6.jpeg
 python3 analog_gr.py --test_mode bls_test --num_of_meter 1 --crop_horiz 25 --rotate crop1 counterclockwise --meter_name meter7.jpeg
 python3 analog_gr.py --test_mode bls_test --num_of_meter 1 --crop_horiz 25 --rotate crop1 counterclockwise --meter_name meter8.jpeg
-python3 analog_gr.py --test_mode bls_test --num_of_meter 1 --rotate crop1 counterclockwise --meter_name meter9.jpeg
+python3 analog_gr.py --test_mode bls_test --num_of_meter 1 --crop_horiz 25 --rotate crop1 counterclockwise --meter_name meter9.jpeg
 
 
 python3 analog_gr.py --test_mode rp_test --num_of_meter 1 --meter_name meter1.jpeg
