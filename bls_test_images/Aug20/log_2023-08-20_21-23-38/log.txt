@@ -1,0 +1,165 @@
+Starting Image Capture at 2023-08-20_21-23-38
+docker0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        inet 172.17.0.1  netmask 255.255.0.0  broadcast 172.17.255.255
+        ether 02:42:73:d7:3c:40  txqueuelen 0  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+eth0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        ether 00:04:4b:ec:2e:68  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+        device interrupt 151  base 0x2000  
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1  (Local Loopback)
+        RX packets 34749  bytes 4042422 (4.0 MB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 34749  bytes 4042422 (4.0 MB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+rndis0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        ether 06:49:24:2a:30:99  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+usb0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        ether 06:49:24:2a:30:9b  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+wlan0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.1.56  netmask 255.255.255.0  broadcast 192.168.1.255
+        inet6 fe80::6b13:371e:28ee:ec1b  prefixlen 64  scopeid 0x20<link>
+        ether 5c:a6:e6:48:d4:2b  txqueuelen 1000  (Ethernet)
+        RX packets 1852  bytes 260154 (260.1 KB)
+        RX errors 0  dropped 7  overruns 0  frame 0
+        TX packets 2029  bytes 2439205 (2.4 MB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+Encoder null, cannot set bitrate!
+Encoder Profile = High
+** Message: 21:23:39.403: <main:4674> iterating capture loop ....
+
+Starting automation...
+Image Captured 
+** Message: 21:23:45.685: <main:4684> Capture completed
+** Message: 21:23:45.686: <main:4733> Camera application will now exit
+Guage image captured successfully: images/meter.jpeg
+Starting Python Script at 2023-08-20_21-23-38
+Python script output Current reading: For Image 1 213.03093466353576 PSI
+Sleeping for 3600 sec 2023-08-20_21-23-38
+analog_gr.py --test_mode bls --num_of_meter 1 --rotate crop1 clockwise
+Starting normal test
+Starting Test meter1.jpeg
+==========================
+Number of circles detected after crop: 1
+Tested parameters: minDist=200, param1=200, param2=100, minRadius=50, maxRadius=500
+Cropped image: images/crop1.jpg, x=379, y=199, r=110 offset=1
+Cropping Dimensions: Start Y=88, End Y=310, Start X=268, End X=490
+Circle detected! Parameters:
+Rotate crop1.jpg counterclockwise by 30 degree
+min_angle 20 max_angle 340 min_value 0 max_value 4000
+Starting Test crop1.jpg
+==========================
+average_brightness = 113.90913886859832
+brightness_threshold = 150
+find_and_draw_circle Number of circles detected: 1
+find_and_draw_circle Number of circles detected: 1
+find_and_draw_circle image: images/crop1.jpg, x=108, y=110, r=110
+Filtering lines based on (r * 0.4) <= dist_pt_higher <= (r * 0.96) and (dist_pt_higher - dist_pt_lower) >= 15 and <=r and (dist_pt_lower <= (r * 0.7))
+get_all_lines 44.00 <= dist_pt_higher=105.70 <= 105.60 and 0.23 >= 15 and 0.23 <= 110.00 and {dist_pt_lower=105.48} <= 44.00 radius 110.00 name all_line2.jpg
+Longest line: (x1=10, y1=71) to (x2=11, y2=152), Length: 81.01 name all_line2.jpg
+get_all_lines 44.00 <= dist_pt_higher=89.05 <= 105.60 and 0.03 >= 15 and 0.03 <= 110.00 and {dist_pt_lower=89.02} <= 44.00 radius 110.00 name all_line15.jpg
+get_all_lines 44.00 <= dist_pt_higher=105.10 <= 105.60 and 14.05 >= 15 and 14.05 <= 110.00 and {dist_pt_lower=91.05} <= 44.00 radius 110.00 name all_line16.jpg
+get_all_lines 44.00 <= dist_pt_higher=105.82 <= 105.60 and 1.43 >= 15 and 1.43 <= 110.00 and {dist_pt_lower=104.39} <= 44.00 radius 110.00 name all_line18.jpg
+Longest line: (x1=12, y1=69) to (x2=17, y2=164), Length: 95.13 name all_line18.jpg
+get_all_lines 44.00 <= dist_pt_higher=103.45 <= 105.60 and 8.90 >= 15 and 8.90 <= 110.00 and {dist_pt_lower=94.54} <= 44.00 radius 110.00 name all_line19.jpg
+get_all_lines 44.00 <= dist_pt_higher=66.40 <= 105.60 and 33.28 >= 15 and 33.28 <= 110.00 and {dist_pt_lower=33.12} <= 44.00 radius 110.00 name all_line24.jpg
+Longest line: (x1=68, y1=163) to (x2=137, y2=94), Length: 97.58 name all_line24.jpg
+Filtered lines name all_line24.jpg
+Finding longest_filtered_line name all_line24.jpg 66.40 >= 55.00 and 66.40 <= 99.00
+Longest filtered line: (x1=68, y1=163) to (x2=137, y2=94), Length: 97.58 name all_line24.jpg
+get_all_lines 44.00 <= dist_pt_higher=105.48 <= 105.60 and 11.14 >= 15 and 11.14 <= 110.00 and {dist_pt_lower=94.34} <= 44.00 radius 110.00 name all_line46.jpg
+get_all_lines 44.00 <= dist_pt_higher=59.36 <= 105.60 and 28.56 >= 15 and 28.56 <= 110.00 and {dist_pt_lower=30.81} <= 44.00 radius 110.00 name all_line48.jpg
+Filtered lines name all_line48.jpg
+Finding longest_filtered_line name all_line48.jpg 59.36 >= 55.00 and 59.36 <= 99.00
+get_all_lines 44.00 <= dist_pt_higher=93.48 <= 105.60 and 2.24 >= 15 and 2.24 <= 110.00 and {dist_pt_lower=91.24} <= 44.00 radius 110.00 name all_line51.jpg
+get_all_lines 44.00 <= dist_pt_higher=105.95 <= 105.60 and 12.60 >= 15 and 12.60 <= 110.00 and {dist_pt_lower=93.34} <= 44.00 radius 110.00 name all_line54.jpg
+get_all_lines 44.00 <= dist_pt_higher=105.55 <= 105.60 and 0.24 >= 15 and 0.24 <= 110.00 and {dist_pt_lower=105.30} <= 44.00 radius 110.00 name all_line58.jpg
+get_all_lines 44.00 <= dist_pt_higher=106.61 <= 105.60 and 14.90 >= 15 and 14.90 <= 110.00 and {dist_pt_lower=91.71} <= 44.00 radius 110.00 name all_line65.jpg
+get_all_lines 44.00 <= dist_pt_higher=105.77 <= 105.60 and 2.19 >= 15 and 2.19 <= 110.00 and {dist_pt_lower=103.58} <= 44.00 radius 110.00 name all_line66.jpg
+get_all_lines 44.00 <= dist_pt_higher=102.65 <= 105.60 and 8.63 >= 15 and 8.63 <= 110.00 and {dist_pt_lower=94.02} <= 44.00 radius 110.00 name all_line67.jpg
+get_all_lines 44.00 <= dist_pt_higher=97.53 <= 105.60 and 0.45 >= 15 and 0.45 <= 110.00 and {dist_pt_lower=97.08} <= 44.00 radius 110.00 name all_line69.jpg
+get_all_lines 44.00 <= dist_pt_higher=30.89 <= 105.60 and 0.47 >= 15 and 0.47 <= 110.00 and {dist_pt_lower=30.41} <= 44.00 radius 110.00 name all_line75.jpg
+get_all_lines 44.00 <= dist_pt_higher=88.65 <= 105.60 and 0.10 >= 15 and 0.10 <= 110.00 and {dist_pt_lower=88.55} <= 44.00 radius 110.00 name all_line76.jpg
+get_all_lines 44.00 <= dist_pt_higher=97.17 <= 105.60 and 0.04 >= 15 and 0.04 <= 110.00 and {dist_pt_lower=97.13} <= 44.00 radius 110.00 name all_line82.jpg
+get_all_lines 44.00 <= dist_pt_higher=105.68 <= 105.60 and 10.33 >= 15 and 10.33 <= 110.00 and {dist_pt_lower=95.35} <= 44.00 radius 110.00 name all_line93.jpg
+get_all_lines 44.00 <= dist_pt_higher=105.30 <= 105.60 and 2.89 >= 15 and 2.89 <= 110.00 and {dist_pt_lower=102.42} <= 44.00 radius 110.00 name all_line105.jpg
+get_all_lines 44.00 <= dist_pt_higher=106.51 <= 105.60 and 1.09 >= 15 and 1.09 <= 110.00 and {dist_pt_lower=105.42} <= 44.00 radius 110.00 name all_line109.jpg
+get_all_lines 44.00 <= dist_pt_higher=30.41 <= 105.60 and 22.80 >= 15 and 22.80 <= 110.00 and {dist_pt_lower=7.62} <= 44.00 radius 110.00 name all_line110.jpg
+get_all_lines 44.00 <= dist_pt_higher=105.12 <= 105.60 and 7.37 >= 15 and 7.37 <= 110.00 and {dist_pt_lower=97.74} <= 44.00 radius 110.00 name all_line114.jpg
+get_all_lines 44.00 <= dist_pt_higher=16.55 <= 105.60 and 10.15 >= 15 and 10.15 <= 110.00 and {dist_pt_lower=6.40} <= 44.00 radius 110.00 name all_line116.jpg
+get_all_lines 44.00 <= dist_pt_higher=106.79 <= 105.60 and 14.66 >= 15 and 14.66 <= 110.00 and {dist_pt_lower=92.13} <= 44.00 radius 110.00 name all_line118.jpg
+get_all_lines 44.00 <= dist_pt_higher=105.42 <= 105.60 and 11.40 >= 15 and 11.40 <= 110.00 and {dist_pt_lower=94.02} <= 44.00 radius 110.00 name all_line119.jpg
+get_all_lines 44.00 <= dist_pt_higher=30.61 <= 105.60 and 11.64 >= 15 and 11.64 <= 110.00 and {dist_pt_lower=18.97} <= 44.00 radius 110.00 name all_line121.jpg
+get_all_lines 44.00 <= dist_pt_higher=108.00 <= 105.60 and 19.05 >= 15 and 19.05 <= 110.00 and {dist_pt_lower=88.96} <= 44.00 radius 110.00 name all_line131.jpg
+get_all_lines 44.00 <= dist_pt_higher=104.86 <= 105.60 and 13.81 >= 15 and 13.81 <= 110.00 and {dist_pt_lower=91.05} <= 44.00 radius 110.00 name all_line136.jpg
+get_all_lines 44.00 <= dist_pt_higher=42.19 <= 105.60 and 10.89 >= 15 and 10.89 <= 110.00 and {dist_pt_lower=31.30} <= 44.00 radius 110.00 name all_line146.jpg
+get_all_lines 44.00 <= dist_pt_higher=102.55 <= 105.60 and 11.93 >= 15 and 11.93 <= 110.00 and {dist_pt_lower=90.62} <= 44.00 radius 110.00 name all_line150.jpg
+get_all_lines 44.00 <= dist_pt_higher=85.84 <= 105.60 and 0.94 >= 15 and 0.94 <= 110.00 and {dist_pt_lower=84.90} <= 44.00 radius 110.00 name all_line151.jpg
+get_all_lines 44.00 <= dist_pt_higher=84.48 <= 105.60 and 0.10 >= 15 and 0.10 <= 110.00 and {dist_pt_lower=84.38} <= 44.00 radius 110.00 name all_line153.jpg
+get_all_lines 44.00 <= dist_pt_higher=43.27 <= 105.60 and 13.86 >= 15 and 13.86 <= 110.00 and {dist_pt_lower=29.41} <= 44.00 radius 110.00 name all_line160.jpg
+get_all_lines 44.00 <= dist_pt_higher=24.76 <= 105.60 and 7.27 >= 15 and 7.27 <= 110.00 and {dist_pt_lower=17.49} <= 44.00 radius 110.00 name all_line166.jpg
+get_all_lines 44.00 <= dist_pt_higher=109.84 <= 105.60 and 17.18 >= 15 and 17.18 <= 110.00 and {dist_pt_lower=92.66} <= 44.00 radius 110.00 name all_line171.jpg
+get_all_lines 44.00 <= dist_pt_higher=90.25 <= 105.60 and 0.66 >= 15 and 0.66 <= 110.00 and {dist_pt_lower=89.59} <= 44.00 radius 110.00 name all_line175.jpg
+get_all_lines 44.00 <= dist_pt_higher=31.38 <= 105.60 and 22.17 >= 15 and 22.17 <= 110.00 and {dist_pt_lower=9.22} <= 44.00 radius 110.00 name all_line190.jpg
+get_all_lines 44.00 <= dist_pt_higher=106.48 <= 105.60 and 0.23 >= 15 and 0.23 <= 110.00 and {dist_pt_lower=106.25} <= 44.00 radius 110.00 name all_line194.jpg
+get_all_lines 44.00 <= dist_pt_higher=105.00 <= 105.60 and 14.20 >= 15 and 14.20 <= 110.00 and {dist_pt_lower=90.80} <= 44.00 radius 110.00 name all_line198.jpg
+get_all_lines 44.00 <= dist_pt_higher=105.48 <= 105.60 and 18.15 >= 15 and 18.15 <= 110.00 and {dist_pt_lower=87.32} <= 44.00 radius 110.00 name all_line206.jpg
+get_all_lines 44.00 <= dist_pt_higher=97.08 <= 105.60 and 7.88 >= 15 and 7.88 <= 110.00 and {dist_pt_lower=89.20} <= 44.00 radius 110.00 name all_line208.jpg
+get_all_lines 44.00 <= dist_pt_higher=107.70 <= 105.60 and 12.58 >= 15 and 12.58 <= 110.00 and {dist_pt_lower=95.13} <= 44.00 radius 110.00 name all_line211.jpg
+get_all_lines 44.00 <= dist_pt_higher=29.21 <= 105.60 and 18.77 >= 15 and 18.77 <= 110.00 and {dist_pt_lower=10.44} <= 44.00 radius 110.00 name all_line219.jpg
+get_all_lines 44.00 <= dist_pt_higher=104.66 <= 105.60 and 9.47 >= 15 and 9.47 <= 110.00 and {dist_pt_lower=95.19} <= 44.00 radius 110.00 name all_line220.jpg
+get_all_lines 44.00 <= dist_pt_higher=57.43 <= 105.60 and 28.02 >= 15 and 28.02 <= 110.00 and {dist_pt_lower=29.41} <= 44.00 radius 110.00 name all_line222.jpg
+Filtered lines name all_line222.jpg
+Finding longest_filtered_line name all_line222.jpg 57.43 >= 55.00 and 57.43 <= 99.00
+get_all_lines 44.00 <= dist_pt_higher=108.46 <= 105.60 and 19.94 >= 15 and 19.94 <= 110.00 and {dist_pt_lower=88.53} <= 44.00 radius 110.00 name all_line229.jpg
+get_all_lines 44.00 <= dist_pt_higher=104.48 <= 105.60 and 12.70 >= 15 and 12.70 <= 110.00 and {dist_pt_lower=91.79} <= 44.00 radius 110.00 name all_line232.jpg
+get_all_lines 44.00 <= dist_pt_higher=108.00 <= 105.60 and 19.19 >= 15 and 19.19 <= 110.00 and {dist_pt_lower=88.81} <= 44.00 radius 110.00 name all_line234.jpg
+get_all_lines 44.00 <= dist_pt_higher=24.84 <= 105.60 and 9.58 >= 15 and 9.58 <= 110.00 and {dist_pt_lower=15.26} <= 44.00 radius 110.00 name all_line235.jpg
+get_all_lines 44.00 <= dist_pt_higher=91.05 <= 105.60 and 0.44 >= 15 and 0.44 <= 110.00 and {dist_pt_lower=90.61} <= 44.00 radius 110.00 name all_line238.jpg
+get_all_lines 44.00 <= dist_pt_higher=102.04 <= 105.60 and 1.36 >= 15 and 1.36 <= 110.00 and {dist_pt_lower=100.69} <= 44.00 radius 110.00 name all_line239.jpg
+get_all_lines 44.00 <= dist_pt_higher=105.26 <= 105.60 and 9.49 >= 15 and 9.49 <= 110.00 and {dist_pt_lower=95.78} <= 44.00 radius 110.00 name all_line240.jpg
+get_all_lines 44.00 <= dist_pt_higher=109.49 <= 105.60 and 20.95 >= 15 and 20.95 <= 110.00 and {dist_pt_lower=88.54} <= 44.00 radius 110.00 name all_line243.jpg
+get_all_lines 44.00 <= dist_pt_higher=19.10 <= 105.60 and 2.95 >= 15 and 2.95 <= 110.00 and {dist_pt_lower=16.16} <= 44.00 radius 110.00 name all_line249.jpg
+get_all_lines 44.00 <= dist_pt_higher=104.68 <= 105.60 and 2.68 >= 15 and 2.68 <= 110.00 and {dist_pt_lower=102.00} <= 44.00 radius 110.00 name all_line252.jpg
+get_all_lines 44.00 <= dist_pt_higher=16.03 <= 105.60 and 6.03 >= 15 and 6.03 <= 110.00 and {dist_pt_lower=10.00} <= 44.00 radius 110.00 name all_line254.jpg
+get_all_lines 44.00 <= dist_pt_higher=97.19 <= 105.60 and 0.04 >= 15 and 0.04 <= 110.00 and {dist_pt_lower=97.14} <= 44.00 radius 110.00 name all_line260.jpg
+get_all_lines 44.00 <= dist_pt_higher=108.12 <= 105.60 and 21.65 >= 15 and 21.65 <= 110.00 and {dist_pt_lower=86.47} <= 44.00 radius 110.00 name all_line269.jpg
+get_all_lines 44.00 <= dist_pt_higher=105.44 <= 105.60 and 10.67 >= 15 and 10.67 <= 110.00 and {dist_pt_lower=94.76} <= 44.00 radius 110.00 name all_line278.jpg
+get_all_lines 44.00 <= dist_pt_higher=105.02 <= 105.60 and 5.94 >= 15 and 5.94 <= 110.00 and {dist_pt_lower=99.08} <= 44.00 radius 110.00 name all_line279.jpg
+Longest line: (x1=137, y1=94) to (x2=68, y2=163), Length: 97.58
+Longest filtered line: (x1=137, y1=94) to (x2=68, y2=163), Length: 97.58
+
+
+Filtering lines based on diff1 < diff1UpperBound * r and diff1 > diff1LowerBound * r and
+diff2 < diff2UpperBound * r and diff2 > diff2LowerBound * r
+get_final_line diff1 = 33.12 diff1UpperBound * r = 77.00 diff1LowerBound * r = 0.00
+get_final_line diff2 = 66.40 diff2UpperBound * r = 110.00 diff2LowerBound * r = 38.50
+adding to final line list
+get_final_line diff1 = 33.12 diff1UpperBound * r = 77.00 diff1LowerBound * r = 0.00
+get_final_line diff2 = 66.40 diff2UpperBound * r = 110.00 diff2LowerBound * r = 38.50
+adding to final line list
+
+
+Current reading: For Image 1 213.03093466353576 PSI

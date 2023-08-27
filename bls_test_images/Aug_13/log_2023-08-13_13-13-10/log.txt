@@ -1,0 +1,125 @@
+Starting Image Capture at 2023-08-13_13-13-10
+docker0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        inet 172.17.0.1  netmask 255.255.0.0  broadcast 172.17.255.255
+        ether 02:42:73:d7:3c:40  txqueuelen 0  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+eth0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        ether 00:04:4b:ec:2e:68  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+        device interrupt 151  base 0x2000  
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1  (Local Loopback)
+        RX packets 7767  bytes 868643 (868.6 KB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 7767  bytes 868643 (868.6 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+rndis0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        ether 06:49:24:2a:30:99  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+usb0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        ether 06:49:24:2a:30:9b  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+wlan0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.1.56  netmask 255.255.255.0  broadcast 192.168.1.255
+        inet6 fe80::6b13:371e:28ee:ec1b  prefixlen 64  scopeid 0x20<link>
+        ether 5c:a6:e6:48:d4:2b  txqueuelen 1000  (Ethernet)
+        RX packets 22810  bytes 4818784 (4.8 MB)
+        RX errors 0  dropped 86  overruns 0  frame 0
+        TX packets 24451  bytes 28517755 (28.5 MB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+Encoder null, cannot set bitrate!
+Encoder Profile = High
+** Message: 13:13:10.734: <main:4674> iterating capture loop ....
+
+Starting automation...
+Image Captured 
+** Message: 13:13:16.664: <main:4684> Capture completed
+** Message: 13:13:16.665: <main:4733> Camera application will now exit
+Guage image captured successfully: images/meter.jpeg
+Starting Python Script at 2023-08-13_13-13-10
+Python script output Current reading: For Image 1 1531.547755482983 PSI
+Sleeping for 3600 sec 2023-08-13_13-13-10
+analog_gr.py --test_mode bls --num_of_meter 1 --rotate crop1 clockwise
+Starting normal test
+Starting Test meter1.jpeg
+==========================
+Number of circles detected after crop: 1
+Tested parameters: minDist=200, param1=200, param2=100, minRadius=50, maxRadius=500
+Cropped image: images/crop1.jpg, x=376, y=183, r=105 offset=1
+Cropping Dimensions: Start Y=77, End Y=289, Start X=270, End X=482
+Circle detected! Parameters:
+Rotate crop1.jpg counterclockwise by 30 degree
+min_angle 20 max_angle 340 min_value 0 max_value 4000
+Starting Test crop1.jpg
+==========================
+average_brightness = 117.76679868280527
+brightness_threshold = 150
+find_and_draw_circle Number of circles detected: 1
+find_and_draw_circle Number of circles detected: 1
+find_and_draw_circle image: images/crop1.jpg, x=108, y=108, r=70
+Filtering lines based on (r * 0.4) <= dist_pt_higher <= (r * 0.96) and (dist_pt_higher - dist_pt_lower) >= 15 and <=r and (dist_pt_lower <= (r * 0.7))
+get_all_lines 28.00 <= dist_pt_higher=30.61 <= 67.20 and 14.49 >= 15 and 14.49 <= 70.00 and {dist_pt_lower=16.12} <= 28.00 radius 70.00 name all_line3.jpg
+Longest line: (x1=94, y1=100) to (x2=127, y2=132), Length: 45.97 name all_line3.jpg
+get_all_lines 28.00 <= dist_pt_higher=29.70 <= 67.20 and 12.67 >= 15 and 12.67 <= 70.00 and {dist_pt_lower=17.03} <= 28.00 radius 70.00 name all_line4.jpg
+Longest line: (x1=95, y1=97) to (x2=129, y2=129), Length: 46.69 name all_line4.jpg
+get_all_lines 28.00 <= dist_pt_higher=30.48 <= 67.20 and 9.22 >= 15 and 9.22 <= 70.00 and {dist_pt_lower=21.26} <= 28.00 radius 70.00 name all_line10.jpg
+Longest line: (x1=94, y1=92) to (x2=131, y2=128), Length: 51.62 name all_line10.jpg
+get_all_lines 28.00 <= dist_pt_higher=30.61 <= 67.20 and 22.55 >= 15 and 22.55 <= 70.00 and {dist_pt_lower=8.06} <= 28.00 radius 70.00 name all_line15.jpg
+Filtered lines name all_line15.jpg
+Finding longest_filtered_line name all_line15.jpg 30.61 >= 35.00 and 30.61 <= 63.00
+get_all_lines 28.00 <= dist_pt_higher=37.80 <= 67.20 and 29.56 >= 15 and 29.56 <= 70.00 and {dist_pt_lower=8.25} <= 28.00 radius 70.00 name all_line25.jpg
+Filtered lines name all_line25.jpg
+Finding longest_filtered_line name all_line25.jpg 37.80 >= 35.00 and 37.80 <= 63.00
+Longest filtered line: (x1=85, y1=78) to (x2=116, y2=106), Length: 41.77 name all_line25.jpg
+get_all_lines 28.00 <= dist_pt_higher=62.13 <= 67.20 and 31.26 >= 15 and 31.26 <= 70.00 and {dist_pt_lower=30.87} <= 28.00 radius 70.00 name all_line38.jpg
+Longest line: (x1=74, y1=56) to (x2=121, y2=136), Length: 92.78 name all_line38.jpg
+get_all_lines 28.00 <= dist_pt_higher=31.14 <= 67.20 and 18.11 >= 15 and 18.11 <= 70.00 and {dist_pt_lower=13.04} <= 28.00 radius 70.00 name all_line58.jpg
+Filtered lines name all_line58.jpg
+Finding longest_filtered_line name all_line58.jpg 31.14 >= 35.00 and 31.14 <= 63.00
+get_all_lines 28.00 <= dist_pt_higher=30.41 <= 67.20 and 14.89 >= 15 and 14.89 <= 70.00 and {dist_pt_lower=15.52} <= 28.00 radius 70.00 name all_line64.jpg
+get_all_lines 28.00 <= dist_pt_higher=29.68 <= 67.20 and 23.28 >= 15 and 23.28 <= 70.00 and {dist_pt_lower=6.40} <= 28.00 radius 70.00 name all_line77.jpg
+Filtered lines name all_line77.jpg
+Finding longest_filtered_line name all_line77.jpg 29.68 >= 35.00 and 29.68 <= 63.00
+get_all_lines 28.00 <= dist_pt_higher=30.41 <= 67.20 and 22.35 >= 15 and 22.35 <= 70.00 and {dist_pt_lower=8.06} <= 28.00 radius 70.00 name all_line78.jpg
+Filtered lines name all_line78.jpg
+Finding longest_filtered_line name all_line78.jpg 30.41 >= 35.00 and 30.41 <= 63.00
+get_all_lines 28.00 <= dist_pt_higher=27.02 <= 67.20 and 17.17 >= 15 and 17.17 <= 70.00 and {dist_pt_lower=9.85} <= 28.00 radius 70.00 name all_line100.jpg
+get_all_lines 28.00 <= dist_pt_higher=26.91 <= 67.20 and 23.74 >= 15 and 23.74 <= 70.00 and {dist_pt_lower=3.16} <= 28.00 radius 70.00 name all_line108.jpg
+get_all_lines 28.00 <= dist_pt_higher=68.66 <= 67.20 and 0.76 >= 15 and 0.76 <= 70.00 and {dist_pt_lower=67.90} <= 28.00 radius 70.00 name all_line122.jpg
+get_all_lines 28.00 <= dist_pt_higher=30.46 <= 67.20 and 22.65 >= 15 and 22.65 <= 70.00 and {dist_pt_lower=7.81} <= 28.00 radius 70.00 name all_line128.jpg
+Filtered lines name all_line128.jpg
+Finding longest_filtered_line name all_line128.jpg 30.46 >= 35.00 and 30.46 <= 63.00
+Longest line: (x1=121, y1=136) to (x2=74, y2=56), Length: 92.78
+Longest filtered line: (x1=116, y1=106) to (x2=85, y2=78), Length: 41.77
+
+
+Filtering lines based on diff1 < diff1UpperBound * r and diff1 > diff1LowerBound * r and
+diff2 < diff2UpperBound * r and diff2 > diff2LowerBound * r
+get_final_line diff1 = 8.25 diff1UpperBound * r = 49.00 diff1LowerBound * r = 0.00
+get_final_line diff2 = 37.80 diff2UpperBound * r = 70.00 diff2LowerBound * r = 24.50
+adding to final line list
+get_final_line diff1 = 30.87 diff1UpperBound * r = 49.00 diff1LowerBound * r = 0.00
+get_final_line diff2 = 62.13 diff2UpperBound * r = 70.00 diff2LowerBound * r = 24.50
+adding to final line list
+
+
+Current reading: For Image 1 1531.547755482983 PSI

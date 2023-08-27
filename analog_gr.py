@@ -166,7 +166,6 @@ def crop_image_using_circle(image_name, parameters_list, num_circles_to_detect):
             if len(circles[0]) != num_circles_to_detect:
                 continue
 
-
         output = img.copy()
 
         # If the desired number of circles is detected, return the parameters and draw the circles
@@ -183,7 +182,7 @@ def crop_image_using_circle(image_name, parameters_list, num_circles_to_detect):
                 x, y, r = circles[0][i]
                 
                 # Calculate the offset as 20% of the circle's radius
-                offset = int(r * 0.01)
+                offset = int(r * 0.03)
 
                 # Calculate the cropping dimensions
                 crop_start_y = y - (r + offset)
@@ -214,34 +213,35 @@ def crop_image_using_circle(image_name, parameters_list, num_circles_to_detect):
     return None
 
 def get_user_input(image_name, sys_argv):
-    #min_angle = input('Min angle (lowest possible angle of dial) - in degrees: ')  # the lowest possible angle
-    #max_angle = input('Max angle (highest possible angle) - in degrees: ')  # highest possible angle
-    #min_value = input('Min value: ')  # usually zero
-    #max_value = input('Max value: ')  # maximum reading of the gauge
-
     global args  # Access the global args variable
 
-    if args.test_mode in ['bls', 'bls_test']:
-        if image_name == "crop2.jpg":
-            min_angle = 25
-            max_angle = 335
-            min_value = 0
-            max_value = 400
-        elif image_name == "crop1.jpg":
-            min_angle = 20
-            max_angle = 340
+    crop_info = dict()  # Create a dictionary to store crop information
+
+    if args.user_input:
+        # Split the user input into individual crop entries
+        crop_entries = args.user_input
+
+        # Iterate through the crop entries and fill in crop information
+        for i in range(0, len(crop_entries), 5):
+            crop_name = crop_entries[i]
+            min_angle = int(crop_entries[i + 1])
+            max_angle = int(crop_entries[i + 2])
+            min_value = int(crop_entries[i + 3])
+            max_value = int(crop_entries[i + 4])
+
+            crop_info[crop_name] = (min_angle, max_angle, min_value, max_value)
+
+    for crop_key in crop_info:
+        if crop_key in image_name:
+            min_angle, max_angle, min_value, max_value = crop_info[crop_key]
+            break
+        else:
+            # Default values if no specific crop information is provided
+            min_angle = 40
+            max_angle = 320
             min_value = 0
             max_value = 4000
-        elif image_name == "crop3.jpg":
-            min_angle = 30
-            max_angle = 340
-            min_value = 0
-            max_value = 4000
-    else:
-        min_angle =20
-        max_angle =340
-        min_value = 0
-        max_value = 230
+
     write_to_log_file("min_angle %s max_angle %s min_value %s max_value %s" % (min_angle, max_angle, min_value, max_value))
     return min_angle, max_angle, min_value, max_value
 
@@ -358,12 +358,15 @@ def find_and_draw_circle(image_path, gauge_number, file_type, params):
     #print("height = ", height)
     #print("width = ", width)
 
+    min_radius = height // 2 - 10
+    max_radius = height // 2 + 10
+
     # Convert the image to gray scale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     
     #edges = cv2.Canny(gray, 100, 200)
 
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=params[0], param1=params[1], param2=params[2], minRadius=params[3], maxRadius=params[4])
+    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=params[0], param1=params[1], param2=params[2], minRadius=min_radius, maxRadius=max_radius)
 
     #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=150, param1=100, param2=50, minRadius=30, maxRadius=100)
     #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, 100, np.array([]), 100, 50, int(height * 0.35),
@@ -373,23 +376,23 @@ def find_and_draw_circle(image_path, gauge_number, file_type, params):
     #circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=200, param1=200, param2=100, int(height * 0.35), int(height * 0.48))
 
     if circles is not None:
-        write_to_log_file("find_and_draw_circle Number of circles detected: %s" % (len(circles[0])))
+        write_to_log_file("find_and_draw_circle Number of circles detected: %s Height %s Width %s Min Radius %s Max Radius %s" % (len(circles[0]), height, width, min_radius, max_radius))
     else:
-        write_to_log_file("find_and_draw_circle No circles detected in the image.")
+        write_to_log_file("find_and_draw_circle No circles detected in the image. Height %s Width %s Min Radius %s Max Radius %s" % (height, width, min_radius, max_radius))
 
         # Try different parameters to detect circles
         for param_set in find_and_draw_circle_crop_parameters_list:
-            circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=param_set[0], param1=param_set[1], param2=param_set[2], minRadius=param_set[3], maxRadius=param_set[4])
+            circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp=1, minDist=param_set[0], param1=param_set[1], param2=param_set[2], minRadius=min_radius, maxRadius=max_radius)
             if circles is not None:
-                write_to_log_file("find_and_draw_circle Circle detected with alternate parameters.")
+                write_to_log_file("find_and_draw_circle Circle detected with alternate parameters. Number of circles detected: %s Height %s Width %s Min Radius %s Max Radius %s" % (len(circles[0]), height, width, min_radius, max_radius))
                 # Draw circles, save image, and return
                 # ...
                 break  # Break the loop since we've found circles with alternate parameters
 
     if circles is not None:
-        write_to_log_file("find_and_draw_circle Number of circles detected: %s" % (len(circles[0])))
+        write_to_log_file("find_and_draw_circle Number of circles detected: %s Height %s Width %s Min Radius %s Max Radius %s" % (len(circles[0]), height, width, min_radius, max_radius))
     else:
-        write_to_log_file("find_and_draw_circle No circles detected in the image.")
+        write_to_log_file("find_and_draw_circle No circles detected in the image. Height %s Width %s Min Radius %s Max Radius %s" % (height, width, min_radius, max_radius))
 
 
     # Draw circles that are detected.
@@ -462,13 +465,13 @@ def find_angle_between_2_points(x, y, final_line_list):
 
     # these were determined by trial and error
     res = np.rad2deg(res)
-    if x_angle > 0 and y_angle > 0:  # in quadrant I
+    if x_angle >= 0 and y_angle >= 0:  # in quadrant I
         final_angle = 270 - res
-    if x_angle < 0 and y_angle > 0:  # in quadrant II
+    if x_angle <= 0 and y_angle >= 0:  # in quadrant II
         final_angle = 90 - res # this should be - based on test result
-    if x_angle < 0 and y_angle < 0:  # in quadrant III
+    if x_angle <= 0 and y_angle <= 0:  # in quadrant III
         final_angle = 90 - res
-    if x_angle > 0 and y_angle < 0:  # in quadrant IV
+    if x_angle >= 0 and y_angle <= 0:  # in quadrant IV
         final_angle = 270 + res
 
     return final_angle
@@ -530,12 +533,15 @@ def get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type, sys
                 write_to_log_file("get_final_line diff2 = {:.2f} diff2UpperBound * r = {:.2f} diff2LowerBound * r = {:.2f}".format(diff2, diff2UpperBound * r, diff2LowerBound * r))
 
                 # check if line is within an acceptable range
-                if ((diff1 < diff1UpperBound * r) and (diff1 > diff1LowerBound * r) and
-                    (diff2 < diff2UpperBound * r) and (diff2 > diff2LowerBound * r)):
+                if (((diff1 < diff1UpperBound * r) and (diff1 > diff1LowerBound * r)) and
+                    ((diff2 < diff2UpperBound * r) and (diff2 > diff2LowerBound * r))):
                     # add to final list
                     write_to_log_file("adding to final line list")
                     final_line_list.append([x1, y1, x2, y2])
     write_to_log_file("\n")
+    if not final_line_list:
+        return final_line_list
+
     # assumes the first line is the best one
     x1 = final_line_list[0][0]
     y1 = final_line_list[0][1]
@@ -629,7 +635,7 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
   
 
             # Filter lines based on conditions
-            if ((r * 0.4) <= dist_pt_higher <= (r * 0.96) and (dist_pt_higher - dist_pt_lower) >= 15 and (dist_pt_higher - dist_pt_lower) <= r and (dist_pt_lower <= (r * 0.4))):
+            if ((r * 0.4) <= dist_pt_higher <= (r * 0.96) and (dist_pt_higher - dist_pt_lower) >= 10 and (dist_pt_higher - dist_pt_lower) <= r and (dist_pt_lower <= (r * 0.4))):
                 write_to_log_file("Filtered lines name all_line%s.%s" % (i, file_type))
                 filtered_lines.append(lines[i])
                
@@ -675,7 +681,7 @@ def get_all_lines(image_path, gauge_number, file_type, x, y, r):
         new_filtered_lines.append(longest_line)
 
     write_to_log_file("\n")
-    return new_filtered_lines
+    return filtered_lines, new_filtered_lines
 
 def get_all_lines1(image_path, gauge_number, file_type):
     img = cv2.imread(image_path)
@@ -779,6 +785,8 @@ def main():
     parser.add_argument('--bright_thresh', type=int, default=150, help='Brightness threshold value default is 150')
     parser.add_argument('--rotate', nargs='+', default=[], help='Crop image and rotation direction for each crop')    
     parser.add_argument('--meter_name', type=str, default=None, help='Name of the meter image to use')
+    parser.add_argument('--user_input', nargs='+', default=[], help='crop1 0 300 40 4000 crop2 0 100 50 200 crop3 0 200 50 500')
+    parser.add_argument('--test_dir', default=os.getcwd(), help='Path to the main directory containing subdirectories')
 
     args = parser.parse_args()
     all_args = sys.argv
@@ -787,37 +795,65 @@ def main():
     log_message = ' '.join(all_args)
     write_to_log_file(log_message)
 
-    num_images = 1  # Number of images (e.g., meter1.jpeg, meter2.jpeg, etc.)
+    #num_images = 47  # Number of images (e.g., meter1.jpeg, meter2.jpeg, etc.)
 
-    for i in range(1, num_images + 1):
+    main_directory = args.test_dir
+    subdirectory = 'images'
+
+    # Get a list of all subdirectories (e.g., Aug_13, Aug_14, etc.) in the main directory
+    subdirectories = [d for d in os.listdir(main_directory) if os.path.isdir(os.path.join(main_directory, d))]
+
+    if not subdirectories:
+        subdirectories = 'images'
+        subdirectory = 'images'
+
+    image_name = f"meter.jpeg"
+    full_image_path = f"{main_directory}/{subdirectory}/{image_name}"
+
+    # Iterate through each subdirectory
+    for subdirectory in subdirectories:
         # Check if "bls_test" is provided as an argument
         if args.test_mode == 'bls_test':
             write_to_log_file("Starting bls_test")
             if args.meter_name:
                 image_name = args.meter_name
             else:
-                image_name = f"meter{i}.jpeg"
-            image_path = f"bls_test_images/{image_name}"  # Construct the image path
-
+                image_name = f"meter.jpeg"
+            if "log_" in subdirectory:
+                full_image_path = f"{main_directory}/{subdirectory}/images/{image_name}"
+            elif "images" in subdirectory:
+                full_image_path = f"{main_directory}/{subdirectory}/{image_name}"
+            elif "test_images" in subdirectory:
+                full_image_path = f"{main_directory}/test_images/{image_name}"
+            else:
+               continue
             # Copy the image to "images/meter.jpeg"
-            shutil.copy(image_path, "images/meter.jpeg")
+            shutil.copy(full_image_path, "images/meter.jpeg")
         # Check if "rp_test" is provided as an argument
         elif args.test_mode == 'rp_test':
             write_to_log_file("Starting rp_test")
+            if not args.test_dir:
+                main_directory = 'rp_test_images'
             if args.meter_name:
                 image_name = args.meter_name
             else:
-                image_name = f"meter{i}.jpeg"
-            image_path = f"rp_test_images/{image_name}"  # Construct the image path
+                image_name = f"meter.jpeg"
+            if "log_" in subdirectory:
+                full_image_path = f"{main_directory}/{subdirectory}/images/{image_name}"
+            elif "images" in subdirectory:
+                full_image_path = f"{main_directory}/{subdirectory}/{image_name}"
+            else:
+                continue;
 
             # Copy the image to "images/meter.jpeg"
-            shutil.copy(image_path, "images/meter.jpeg")
+            shutil.copy(full_image_path, "images/meter.jpeg")
         else:
+            if "images" != subdirectory:
+                continue;
             write_to_log_file("Starting normal test")
 
-        write_to_log_file("Starting Test meter%s.jpeg" % (i))
+        write_to_log_file("Starting Test %s" % (full_image_path))
         write_to_log_file("==========================")
-
 
         if args.crop_horiz is not None:
             cropped_image = crop_image_horizontally("meter.jpeg", args.crop_horiz)
@@ -872,18 +908,23 @@ def main():
 
             img, x, y, r = find_and_draw_circle(image_path, gauge_number, file_type, detected_params)
             img = draw_pts_and_text_in_img_to_show_deg(img, x, y, r, image_path, gauge_number, file_type)
-            lines = get_all_lines(image_path, gauge_number, file_type, x, y, r)
-            no_of_lines = len(lines)
-            # print("no_of_lines = %s" % (no_of_lines))
-            final_line_list = get_final_line(img, lines, x, y, r, image_path, gauge_number, file_type, sys.argv)
+            filtered_lines, new_filtered_lines = get_all_lines(image_path, gauge_number, file_type, x, y, r)
+            final_line_list = get_final_line(img, new_filtered_lines, x, y, r, image_path, gauge_number, file_type, sys.argv)
+            if not final_line_list:
+                final_line_list = get_final_line(img, filtered_lines, x, y, r, image_path, gauge_number, file_type, sys.argv)
             final_angle = find_angle_between_2_points(x, y, final_line_list)
             # print("final_angle %s" % (final_angle))
 
             angle_range = (float(max_angle) - float(min_angle))
             val_range = (float(max_value) - float(min_value))
             new_value = (((float(final_angle) - float(min_angle)) * val_range) / angle_range) + float(min_value)
-            write_to_log_file("Current reading: For Image %s %s PSI" % (j, new_value))
-            print(f"Current reading: For Image {j} {new_value} PSI")
+            if new_value < 0:
+                new_value = 0
+            # Format new_value to display only two decimal places
+            new_value = round(new_value, 2)
+
+            write_to_log_file("Current reading: For Image %s %s %s PSI" % (j, full_image_path, new_value))
+            print(f"Current reading: For Image {j} {full_image_path} {new_value} PSI")
 
 if __name__ == '__main__':
     main()
