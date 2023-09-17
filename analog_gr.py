@@ -454,6 +454,9 @@ def find_angle_between_2_points(x, y, final_line_list):
         x_angle = x2 - x
         y_angle = y - y2
 
+    if x_angle == 0:
+        x_angle = 1
+
     # take the arc tan of y/x to find the angle based on x-axis
     res = np.arctan(np.divide(float(y_angle), float(x_angle)))
     # np.rad2deg(res) #coverts to degrees
