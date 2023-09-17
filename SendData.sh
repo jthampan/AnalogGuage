@@ -145,7 +145,7 @@ run_python_script() {
 
   echo "ARG $arg Number of meter $NUM_OF_METER"
   # Run the Python script and capture the output
-  output=$(python3 analog_gr.py --test_mode $arg --num_of_meter $NUM_OF_METER)
+  output=$(python3 analog_gr.py --test_mode $arg --num_of_meter $NUM_OF_METER --rotate crop1 clockwise --user_input crop1 40 320 0 4000)
 
   echo "Python script output $output" >> $LOG_FOLDER/log.txt
 
