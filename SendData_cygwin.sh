@@ -3,6 +3,19 @@
 TOPDIR=$(pwd)
 LOG_FOLDER=$TOPDIR
 
+download_from_gdrive() {
+# Specify the Google Drive file ID
+file_id="16jj_DJFPzX3rkj-3rllYgi6JtheriDJT"
+
+# Specify the output file name and path
+output_file="images/meter.jpeg"
+
+# Download the file using gdown
+curl -L "https://drive.google.com/uc?id=${file_id}" -O "${output_file}"
+
+echo "Image downloaded to ${output_file}"
+}
+
 capture_image() {
   filename="meter.jpeg"
   nvgstcapture-1.0 --camsrc=0 --cap-dev-node=0 --automate --capture-auto --file-name="$filename" &>> $LOG_FOLDER/log.txt
@@ -204,6 +217,8 @@ while true; do
   #if [ $arg != "rp_test" ] && [ $arg != "bls_test" ]; then
   #  capture_image
   #fi
+  download_from_gdrive()
+
   if [ "$?" -gt 0 ]; then
 	  ((failure_counter++))
 	  if [ "$failure_counter" -eq "$max_failures" ]; then
