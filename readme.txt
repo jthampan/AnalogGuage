@@ -31,3 +31,13 @@ python3 analog_gr.py --test_mode bls_test --num_of_meter 1 --rotate crop1 clockw
 python3 analog_gr.py --test_mode bls_test --num_of_meter 1 --rotate crop1 clockwise --user_input crop1 40 320 0 4000 --test_dir bls_test_images/Aug_16
 
 python3 analog_gr.py --test_mode rp_test --num_of_meter 1 --meter_name meter1.jpeg
+
+# Cygwin Installation
+Run setup-x86_64.exe
+
+# to dowload a package to Cygwin
+Open Cygwin Terminal
+cd to AnalogGuage directory
+For eg: to download zip
+./setup-x86_64.exe -q -P zip
+
